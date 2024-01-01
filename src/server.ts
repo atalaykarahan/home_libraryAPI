@@ -1,6 +1,7 @@
 import express from "express";
 import "dotenv/config";
 import env from "./util/validateEnv";
+import booksRoutes from "./routes/books"
 
 // import exphbs from "express-handlebars";
 // import path from "path";
@@ -21,6 +22,9 @@ app.get("/",(req,res) => {
 app.get("/xaera", (req,res) => {
     res.send("Connection successful!");
 });
+
+// Book routes api/books
+app.use("/api/books", booksRoutes);
 
 app.listen(port, () => {
     console.log(`Server running on port: ${port}`);
