@@ -73,3 +73,59 @@ export const getUser: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+
+interface UpdateUserParams {
+  user_id: number;
+}
+
+interface UpdateUserBody {
+  user_name?: string;
+  password?: string;
+  email?: string;
+  authority_id?: number;
+}
+
+export const updateUser: RequestHandler<
+  UpdateUserParams,
+  unknown,
+  UpdateUserBody,
+  unknown
+> = async (req, res, next) => {
+  const user_id = req.params.user_id;
+  const newUserName = req.body.user_name;
+  const newPassword = req.body.password;
+  const newEmail = req.body.email;
+  const newAuthorityId = req.body.authority_id;
+
+  try {
+    //error invalid user id format
+    if (!user_id || isNaN(Number(user_id))) {
+      throw createHttpError(400, "Invalid 'user id' format");
+    }
+    if (!newUserName) {
+      throw createHttpError(400, "Missing parameter : 'user name'");
+    }
+
+    const user = await UserModel.findByPk(user_id);
+
+    //error user not found
+    if (!user) {
+        throw createHttpError(404, "User not found");
+      }
+
+      /* Normalde kullanici olusturulurken password ve authority zorunlu alan
+      /* Bundan dolayi modeli null olabilir yapmak yerine burda if kontrolu yapmak 
+      /* daha makul geldi */
+      user.user_name = newUserName;
+      if(newPassword) user.password = newPassword;
+      user.email = newEmail;
+      if(newAuthorityId) user.authority_id = newAuthorityId;
+
+      const updatedUser = await user.save();
+
+      res.status(200).json(updatedUser);
+
+  } catch (error) {
+    next(error);
+  }
+};

@@ -1,7 +1,15 @@
-import { DataTypes } from "sequelize";
+import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import db from "../../db";
 
-const User = db.define(
+interface UserInstance extends Model<InferAttributes<UserInstance>, InferCreationAttributes<UserInstance>>{
+  user_id: CreationOptional<number>;
+  user_name: string;
+  password:string;
+  email?:string;
+  authority_id: number;
+}
+
+const User = db.define<UserInstance>(
   "user",
   {
     user_id: {
