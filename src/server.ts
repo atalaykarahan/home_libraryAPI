@@ -3,6 +3,7 @@ import "dotenv/config";
 import env from "./util/validateEnv";
 import booksRoutes from "./routes/books";
 import userRoutes from "./routes/user";
+import authorRoutes from "./routes/author";
 import morgan from "morgan";
 import createHttpError, {isHttpError} from "http-errors";
 // Database
@@ -37,8 +38,11 @@ app.get("/xaera", (req, res) => {
 // Book routes api/books
 app.use("/api/books", booksRoutes);
 
-// User routes api/user
+// User routes api/users
 app.use("/api/users", userRoutes);
+
+// Author routes api/authors
+app.use("/api/authors", authorRoutes);
 
 app.use((req, res, next) => {
     next(createHttpError(404,"Endpoint not found"));

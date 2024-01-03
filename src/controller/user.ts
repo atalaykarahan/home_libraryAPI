@@ -110,20 +110,43 @@ export const updateUser: RequestHandler<
 
     //error user not found
     if (!user) {
-        throw createHttpError(404, "User not found");
-      }
+      throw createHttpError(404, "User not found");
+    }
 
-      /* Normalde kullanici olusturulurken password ve authority zorunlu alan
+    /* Normalde kullanici olusturulurken password ve authority zorunlu alan
       /* Bundan dolayi modeli null olabilir yapmak yerine burda if kontrolu yapmak 
       /* daha makul geldi */
-      user.user_name = newUserName;
-      if(newPassword) user.password = newPassword;
-      user.email = newEmail;
-      if(newAuthorityId) user.authority_id = newAuthorityId;
+    user.user_name = newUserName;
+    if (newPassword) user.password = newPassword;
+    user.email = newEmail;
+    if (newAuthorityId) user.authority_id = newAuthorityId;
 
-      const updatedUser = await user.save();
+    const updatedUser = await user.save();
 
-      res.status(200).json(updatedUser);
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteUser: RequestHandler = async (req, res, next) => {
+  const user_id = req.params.user_id;
+
+  try {
+    //error invalid user id format
+    if (!user_id || isNaN(Number(user_id))) {
+      throw createHttpError(400, "Invalid 'user id' format");
+    }
+
+    const user = await UserModel.findByPk(user_id);
+
+    if(!user){
+        throw createHttpError(404, "User not found");
+    }
+
+    await user.destroy();
+
+    res.sendStatus(204);
 
   } catch (error) {
     next(error);
