@@ -3,15 +3,32 @@ import UserModel from "../models/user";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 
-export const getUsers: RequestHandler = async (req, res, next) => {
+export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
+  const authenticatedUserId = req.session.user_id;
+
   try {
-    UserModel.findAll().then((u) => {
-      res.status(200).json(u);
+    if (!authenticatedUserId) {
+      throw createHttpError(401, "User not authenticated");
+    }
+
+    const user = await UserModel.findByPk(authenticatedUserId, {
+      attributes: {exclude: ['password']},
     });
+    res.status(200).json(user);
   } catch (error) {
     next(error);
   }
 };
+
+// export const getUsers: RequestHandler = async (req, res, next) => {
+//   try {
+//     UserModel.findAll().then((u) => {
+//       res.status(200).json(u);
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 // interface CreateUserBody {
 //   user_name?: string;
@@ -206,7 +223,46 @@ export const signUp: RequestHandler<
       email: email,
       authority_id: 1,
     });
+
+    req.session.user_id = newUser.user_id;
+
     res.status(201).json(newUser);
+  } catch (error) {
+    next(error);
+  }
+};
+
+interface LoginBody {
+  user_name?: string;
+  password?: string;
+}
+export const login: RequestHandler<
+  unknown,
+  unknown,
+  LoginBody,
+  unknown
+> = async (req, res, next) => {
+  const user_name = req.body.user_name;
+  const password = req.body.password;
+
+  try {
+    if (!user_name || !password) {
+      throw createHttpError(400, "Missing parameters");
+    }
+
+    const user = await UserModel.findOne({ where: { user_name: user_name } });
+    if (!user) {
+      throw createHttpError(401, "Invalid credentials");
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      throw createHttpError(401, "Invalid credentials");
+    }
+
+    req.session.user_id = user.user_id;
+    res.status(201).json(user);
   } catch (error) {
     next(error);
   }
