@@ -3,9 +3,11 @@ import * as UserController from "../controller/user";
 
 const router = express.Router();
 
-router.get("/",UserController.getUsers);
+router.post("/signup", UserController.signUp);
 
-router.post("/",UserController.createUser);
+router.get("/", UserController.getUsers);
+
+// router.post("/",UserController.createUser);
 
 router.get("/:user_id", UserController.getUser);
 

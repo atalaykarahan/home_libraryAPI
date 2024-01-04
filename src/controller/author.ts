@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import AuthorModel from "../models/author";
 import createHttpError from "http-errors";
 
+
 //GET ALL
 export const getAuthors: RequestHandler = async (req, res, next) => {
   try {
@@ -12,6 +13,7 @@ export const getAuthors: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+
 
 // CREATE
 interface CreateAuthorBody {
@@ -42,6 +44,8 @@ export const createAuthor: RequestHandler<
     next(error);
   }
 };
+
+
 // GET BY ID
 export const getAuthor: RequestHandler = async (req, res, next) => {
   const author_id = req.params.author_id;
@@ -68,12 +72,10 @@ export const getAuthor: RequestHandler = async (req, res, next) => {
 interface UpdateAuthorParams {
   author_id: number;
 }
-
 interface UpdateAuthorBody {
   author_name?: string;
   author_surname?: string;
 }
-
 export const updateAuthor: RequestHandler<
   UpdateAuthorParams,
   unknown,
@@ -108,6 +110,7 @@ export const updateAuthor: RequestHandler<
     next(error);
   }
 };
+
 
 // DELETE
 export const deleteAuthor: RequestHandler = async (req, res, next) => {

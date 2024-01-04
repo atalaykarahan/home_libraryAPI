@@ -20,6 +20,7 @@ const User = db.define<UserInstance>(
     user_name: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
     },
     password: {
       type: DataTypes.STRING,
@@ -28,6 +29,7 @@ const User = db.define<UserInstance>(
     email: {
       type: DataTypes.STRING,
       allowNull: true,
+      unique: true,
     },
     authority_id: {
       type: DataTypes.BIGINT,
