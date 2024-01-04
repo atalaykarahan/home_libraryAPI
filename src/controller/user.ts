@@ -12,7 +12,7 @@ export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
     }
 
     const user = await UserModel.findByPk(authenticatedUserId, {
-      attributes: {exclude: ['password']},
+      attributes: { exclude: ["password"] },
     });
     res.status(200).json(user);
   } catch (error) {
@@ -20,155 +20,105 @@ export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   }
 };
 
-// export const getUsers: RequestHandler = async (req, res, next) => {
+// export const getUser: RequestHandler = async (req, res, next) => {
+//   const user_id = req.params.user_id;
+
 //   try {
-//     UserModel.findAll().then((u) => {
-//       res.status(200).json(u);
-//     });
+//     //error invalid user id format
+//     if (!user_id || isNaN(Number(user_id))) {
+//       throw createHttpError(400, "Invalid 'user id' format");
+//     }
+
+//     const user = await UserModel.findByPk(user_id);
+
+//     //error user not found
+//     if (!user) {
+//       throw createHttpError(404, "User not found");
+//     }
+
+//     res.status(200).json(user);
 //   } catch (error) {
 //     next(error);
 //   }
 // };
 
-// interface CreateUserBody {
+// interface UpdateUserParams {
+//   user_id: number;
+// }
+
+// interface UpdateUserBody {
 //   user_name?: string;
 //   password?: string;
 //   email?: string;
 //   authority_id?: number;
 // }
 
-// export const createUser: RequestHandler<
+// export const updateUser: RequestHandler<
+//   UpdateUserParams,
 //   unknown,
-//   unknown,
-//   CreateUserBody,
+//   UpdateUserBody,
 //   unknown
 // > = async (req, res, next) => {
-//   const user_name = req.body.user_name;
-//   const password = req.body.password;
-//   const email = req.body.email;
-//   const authority_id = req.body.authority_id;
+//   const user_id = req.params.user_id;
+//   const newUserName = req.body.user_name;
+//   const newPassword = req.body.password;
+//   const newEmail = req.body.email;
+//   const newAuthorityId = req.body.authority_id;
 
 //   try {
-//     if (!user_name) {
-//       throw createHttpError(400, "User must have a 'user name'");
-//     } else if (!password) {
-//       throw createHttpError(400, "User must have a 'password'");
-//     } else if (!authority_id) {
-//       throw createHttpError(400, "User must have a 'authority'");
+//     //error invalid user id format
+//     if (!user_id || isNaN(Number(user_id))) {
+//       throw createHttpError(400, "Invalid 'user id' format");
+//     }
+//     if (!newUserName) {
+//       throw createHttpError(400, "Missing parameter : 'user name'");
 //     }
 
-//     const newUser = await UserModel.create({
-//       user_name: user_name,
-//       password: password,
-//       email: email,
-//       authority_id: authority_id,
-//     });
+//     const user = await UserModel.findByPk(user_id);
 
-//     res.status(201).json(newUser);
+//     //error user not found
+//     if (!user) {
+//       throw createHttpError(404, "User not found");
+//     }
+
+//     /* Normalde kullanici olusturulurken password ve authority zorunlu alan
+//       /* Bundan dolayi modeli null olabilir yapmak yerine burda if kontrolu yapmak 
+//       /* daha makul geldi */
+//     user.user_name = newUserName;
+//     if (newPassword) user.password = newPassword;
+//     user.email = newEmail;
+//     if (newAuthorityId) user.authority_id = newAuthorityId;
+
+//     const updatedUser = await user.save();
+
+//     res.status(200).json(updatedUser);
 //   } catch (error) {
 //     next(error);
 //   }
 // };
 
-export const getUser: RequestHandler = async (req, res, next) => {
-  const user_id = req.params.user_id;
+// export const deleteUser: RequestHandler = async (req, res, next) => {
+//   const user_id = req.params.user_id;
 
-  try {
-    //error invalid user id format
-    if (!user_id || isNaN(Number(user_id))) {
-      throw createHttpError(400, "Invalid 'user id' format");
-    }
+//   try {
+//     //error invalid user id format
+//     if (!user_id || isNaN(Number(user_id))) {
+//       throw createHttpError(400, "Invalid 'user id' format");
+//     }
 
-    const user = await UserModel.findByPk(user_id);
+//     const user = await UserModel.findByPk(user_id);
 
-    //error user not found
-    if (!user) {
-      throw createHttpError(404, "User not found");
-    }
+//     if (!user) {
+//       throw createHttpError(404, "User not found");
+//     }
 
-    res.status(200).json(user);
-  } catch (error) {
-    next(error);
-  }
-};
+//     await user.destroy();
 
-interface UpdateUserParams {
-  user_id: number;
-}
-
-interface UpdateUserBody {
-  user_name?: string;
-  password?: string;
-  email?: string;
-  authority_id?: number;
-}
-
-export const updateUser: RequestHandler<
-  UpdateUserParams,
-  unknown,
-  UpdateUserBody,
-  unknown
-> = async (req, res, next) => {
-  const user_id = req.params.user_id;
-  const newUserName = req.body.user_name;
-  const newPassword = req.body.password;
-  const newEmail = req.body.email;
-  const newAuthorityId = req.body.authority_id;
-
-  try {
-    //error invalid user id format
-    if (!user_id || isNaN(Number(user_id))) {
-      throw createHttpError(400, "Invalid 'user id' format");
-    }
-    if (!newUserName) {
-      throw createHttpError(400, "Missing parameter : 'user name'");
-    }
-
-    const user = await UserModel.findByPk(user_id);
-
-    //error user not found
-    if (!user) {
-      throw createHttpError(404, "User not found");
-    }
-
-    /* Normalde kullanici olusturulurken password ve authority zorunlu alan
-      /* Bundan dolayi modeli null olabilir yapmak yerine burda if kontrolu yapmak 
-      /* daha makul geldi */
-    user.user_name = newUserName;
-    if (newPassword) user.password = newPassword;
-    user.email = newEmail;
-    if (newAuthorityId) user.authority_id = newAuthorityId;
-
-    const updatedUser = await user.save();
-
-    res.status(200).json(updatedUser);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const deleteUser: RequestHandler = async (req, res, next) => {
-  const user_id = req.params.user_id;
-
-  try {
-    //error invalid user id format
-    if (!user_id || isNaN(Number(user_id))) {
-      throw createHttpError(400, "Invalid 'user id' format");
-    }
-
-    const user = await UserModel.findByPk(user_id);
-
-    if (!user) {
-      throw createHttpError(404, "User not found");
-    }
-
-    await user.destroy();
-
-    res.sendStatus(204);
-  } catch (error) {
-    next(error);
-  }
-};
+//     res.sendStatus(204);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 // SignUp
 interface SignUpBody {
@@ -232,6 +182,7 @@ export const signUp: RequestHandler<
   }
 };
 
+// LOGIN
 interface LoginBody {
   user_name?: string;
   password?: string;
@@ -266,4 +217,15 @@ export const login: RequestHandler<
   } catch (error) {
     next(error);
   }
+};
+
+// LOGOUT
+export const logout: RequestHandler = (req, res, next) => {
+  req.session.destroy((error) => {
+    if (error) {
+      next(error);
+    } else {
+      res.sendStatus(200);
+    }
+  });
 };
