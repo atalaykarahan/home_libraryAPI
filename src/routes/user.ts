@@ -9,11 +9,13 @@ router.post("/signup", UserController.signUp);
 
 router.post("/login",UserController.login);
 
+router.post("/login/google", UserController.signInGoogle);
+
 router.post("/logout",UserController.logout);
 
-// router.get("/", UserController.getUsers);
+router.post("/check",UserController.checkUser);
 
-// router.post("/",UserController.createUser);
+// router.get("/:user_id",UserController.getUserById);
 
 // router.get("/:user_id", UserController.getUser);
 
