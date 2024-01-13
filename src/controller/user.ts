@@ -219,58 +219,48 @@ export const logout: RequestHandler = (req, res, next) => {
   });
 };
 
-// CHECK USER
-interface CheckUserBody {
-  user_name?: string;
-  password?: string;
+// RESET USER PASSWORD
+interface ResetBody {
+  userInputValue?: string;
 }
-export const checkUser: RequestHandler<
+export const resetUser: RequestHandler<
   unknown,
   unknown,
-  CheckUserBody,
+  ResetBody,
   unknown
 > = async (req, res, next) => {
-  const user_name = req.body.user_name;
-  const password = req.body.password;
+  const userInputValue = req.body.userInputValue;
 
   try {
-    if (!user_name || !password) {
+    if (!userInputValue) {
       throw createHttpError(400, "Missing parameters");
     }
 
-    const user = await UserModel.findOne({ where: { user_name: user_name } });
-    if (!user) {
-      throw createHttpError(401, "Invalid credentials");
+    //if user send email ve should check so we search '@' and '.' characters
+    const isEmail =
+      userInputValue.includes("@") && userInputValue.includes(".");
+
+    if (isEmail) {
+      const user = await UserModel.findOne({
+        where: { email: userInputValue },
+      });
+
+      if (!user) {
+        throw createHttpError(404, "User does not exist");
+      }
+
+      res.sendStatus(200);
+    } else {
+      console.log("buraya geliyorsa sorun var");
+      const user = await UserModel.findOne({
+        where: { user_name: userInputValue },
+      });
+      if (!user) {
+        throw createHttpError(404, "User does not exist");
+      }
+      res.sendStatus(200);
     }
-
-    const passwordMatch = await bcrypt.compare(password, user.password);
-
-    if (!passwordMatch) {
-      throw createHttpError(401, "Invalid credentials");
-    }
-
-    // req.session.user_id = user.user_id;
-    res.status(201).json(user);
   } catch (error) {
     next(error);
   }
 };
-
-// export const getUserById: RequestHandler = async (req, res, next) => {
-
-//   const authenticatedUserId = req.session.user_id;
-
-//   try {
-//     if (!authenticatedUserId) {
-//       throw createHttpError(401, "User not authenticated");
-//     }
-
-//     const user = await UserModel.findByPk(authenticatedUserId, {
-//       attributes: { exclude: ["password"] },
-//     });
-//     res.status(200).json(user);
-//   } catch (error) {
-//     next(error);
-//   }
-
-// };

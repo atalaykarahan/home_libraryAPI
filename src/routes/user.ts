@@ -14,7 +14,7 @@ router.post("/login/google", UserController.signInGoogle);
 
 router.post("/logout",UserController.logout);
 
-router.post("/check",UserController.checkUser);
+router.post("/reset", UserController.resetUser);
 
 // router.get("/:user_id",UserController.getUserById);
 
