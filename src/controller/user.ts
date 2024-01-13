@@ -4,14 +4,8 @@ import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
-  const authenticatedUserId = req.session.user_id;
-  console.log("GElen id burayada ----> ", authenticatedUserId);
   try {
-    if (!authenticatedUserId) {
-      throw createHttpError(401, "User not authenticated");
-    }
-
-    const user = await UserModel.findByPk(authenticatedUserId, {
+    const user = await UserModel.findByPk(req.session.user_id, {
       attributes: { exclude: ["password"] },
     });
     res.status(200).json(user);
@@ -142,6 +136,7 @@ export const signInGoogle: RequestHandler<
       // throw createHttpError(401, "Invalid credentials");
     } else {
       //eğer böyle bir user var ise şifre eşleşme
+      console.log("şifresi şu-->", passwordRaw);
       const passwordMatch = await bcrypt.compare(passwordRaw, user.password);
 
       if (!passwordMatch) {
