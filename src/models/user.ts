@@ -1,12 +1,24 @@
-import { CreationOptional, DataTypes, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+import {
+  CreationOptional,
+  DataTypes,
+  InferAttributes,
+  InferCreationAttributes,
+  Model,
+} from "sequelize";
 import db from "../../db";
 
-interface UserInstance extends Model<InferAttributes<UserInstance>, InferCreationAttributes<UserInstance>>{
+interface UserInstance
+  extends Model<
+    InferAttributes<UserInstance>,
+    InferCreationAttributes<UserInstance>
+  > {
   user_id: CreationOptional<number>;
   user_name: string;
-  password:string;
-  email?:string;
+  password: string;
+  email?: string;
   authority_id: number;
+  user_email_verified?: boolean;
+  user_google_id?: number;
 }
 
 const User = db.define<UserInstance>(
@@ -35,11 +47,19 @@ const User = db.define<UserInstance>(
       type: DataTypes.BIGINT,
       allowNull: false,
     },
+    user_email_verified: {
+      type: DataTypes.BOOLEAN,
+      allowNull: true,
+    },
+    user_google_id: {
+      type: DataTypes.BIGINT,
+      allowNull: true,
+    },
   },
   {
     tableName: "USER",
     timestamps: false,
-  },
+  }
 );
 
 export default User;

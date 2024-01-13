@@ -12,7 +12,6 @@ import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import cors from "cors";
 
-
 const pgSession = ConnectPgSimple(session);
 
 //Test Db
@@ -24,10 +23,12 @@ db.authenticate()
 const app = express();
 const port = env.PORT;
 
-app.use(cors({
-  origin:"http://localhost:3000",
-  credentials:true,
-}));
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 // For logs endpoint on the console
 app.use(morgan("dev"));
