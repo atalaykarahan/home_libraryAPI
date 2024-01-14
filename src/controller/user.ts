@@ -2,6 +2,8 @@ import { RequestHandler } from "express";
 import UserModel from "../models/user";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
+import { Resend } from "resend";
+import env from "../util/validateEnv";
 
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   try {
@@ -57,6 +59,24 @@ export const signUp: RequestHandler<
           "A user with this email adress already exists. Please log in instead."
         );
       }
+
+      const resend = new Resend(env.RESEND_API_KEY);
+      const { data, error } = await resend.emails.send({
+        from: "Acme <onboarding@resend.dev>",
+        to: ["atalay.karahan59@gmail.com"],
+        subject: "hello world",
+        html: "<strong>it works! denmee 123</strong>",
+      });
+    
+      if (error) {
+        console.log("e posta kısmında hata oluştu ",error);
+      }
+
+      console.log("e postadan dönen data ",data);
+
+
+      //http://localhost:3000/new-verification?token=${your_token_here}
+
     }
 
     const passwordHashed = await bcrypt.hash(passwordRaw, 10);
