@@ -5,4 +5,5 @@ export default cleanEnv(process.env,{
     PORT: port(),
     SESSION_SECRET: str(),
     RESEND_API_KEY:str(),
+    JWT_SECRET_RSA: str(),
 });

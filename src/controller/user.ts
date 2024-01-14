@@ -4,6 +4,7 @@ import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { Resend } from "resend";
 import env from "../util/validateEnv";
+import jwt from "jsonwebtoken";
 
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   try {
@@ -58,39 +59,56 @@ export const signUp: RequestHandler<
           409,
           "A user with this email adress already exists. Please log in instead."
         );
-      }
+      } else {
+        const passwordHashed = await bcrypt.hash(passwordRaw, 10);
 
-      const resend = new Resend(env.RESEND_API_KEY);
-      const { data, error } = await resend.emails.send({
-        from: "Acme <onboarding@resend.dev>",
-        to: ["atalay.karahan59@gmail.com"],
-        subject: "hello world",
-        html: "<strong>it works! denmee 123</strong>",
+        const newUser = await UserModel.create({
+          user_name: user_name,
+          password: passwordHashed,
+          email: email,
+          authority_id: 1,
+        });
+
+        req.session.user_id = newUser.user_id;
+        const obj = {
+          user_name: newUser.user_name,
+          email: newUser.email,
+        }
+
+        const token = jwt.sign(obj, env.JWT_SECRET_RSA, {expiresIn: "5m"});
+        console.log(token);
+
+        const htmlString = `<a>token bu linkin içinde veya şurda --> ${token}</a>`;
+        const resend = new Resend(env.RESEND_API_KEY);
+        const { data, error } = await resend.emails.send({
+          from: "Acme <onboarding@resend.dev>",
+          to: ["atalay.karahan59@gmail.com"],
+          subject: "hello world",
+          html: htmlString,
+        });
+
+        if (error) {
+          console.log("e posta kısmında hata oluştu ", error);
+        }
+
+        console.log("e postadan dönen data ", data);
+        res.status(201).json(newUser);
+
+        //http://localhost:3000/new-verification?token=${your_token_here}
+      }
+    } else {
+      const passwordHashed = await bcrypt.hash(passwordRaw, 10);
+
+      const newUser = await UserModel.create({
+        user_name: user_name,
+        password: passwordHashed,
+        email: email,
+        authority_id: 1,
       });
-    
-      if (error) {
-        console.log("e posta kısmında hata oluştu ",error);
-      }
 
-      console.log("e postadan dönen data ",data);
-
-
-      //http://localhost:3000/new-verification?token=${your_token_here}
-
+      req.session.user_id = newUser.user_id;
+      res.status(201).json(newUser);
     }
-
-    const passwordHashed = await bcrypt.hash(passwordRaw, 10);
-
-    const newUser = await UserModel.create({
-      user_name: user_name,
-      password: passwordHashed,
-      email: email,
-      authority_id: 1,
-    });
-
-    req.session.user_id = newUser.user_id;
-
-    res.status(201).json(newUser);
   } catch (error) {
     next(error);
   }
