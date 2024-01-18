@@ -16,6 +16,8 @@ router.post("/logout",UserController.logout);
 
 router.post("/reset", UserController.resetUser);
 
+router.post("/email-verified", UserController.emailVerified);
+
 // router.get("/:user_id",UserController.getUserById);
 
 // router.get("/:user_id", UserController.getUser);
