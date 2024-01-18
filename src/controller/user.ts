@@ -65,14 +65,13 @@ export const signUp: RequestHandler<
         const newUser = await UserModel.create({
           user_name: user_name,
           password: passwordHashed,
-          email: email,
           authority_id: 1,
         });
 
         req.session.user_id = newUser.user_id;
         const obj = {
-          user_name: newUser.user_name,
-          email: newUser.email,
+          id: newUser.user_id,
+          email: email,
         };
 
         const token = jwt.sign(obj, env.JWT_SECRET_RSA, { expiresIn: "5m" });
@@ -101,7 +100,6 @@ export const signUp: RequestHandler<
       const newUser = await UserModel.create({
         user_name: user_name,
         password: passwordHashed,
-        email: email,
         authority_id: 1,
       });
 
@@ -323,14 +321,13 @@ export const emailVerified: RequestHandler<
       console.log("token doğrulandı");
       console.log(decoded);
 
-      const user = await UserModel.findOne({
-        where: { email: decoded.email },
-      });
+      const user = await UserModel.findByPk(decoded.id);
 
       if (!user) {
         throw createHttpError(401, "Invalid credentials");
       }
 
+      user.email = decoded.email;
       user.user_email_verified = true;
       await user.save();
 
