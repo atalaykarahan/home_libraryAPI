@@ -6,18 +6,20 @@ import { Resend } from "resend";
 import env from "../util/validateEnv";
 import jwt from "jsonwebtoken";
 
+//#region AUTHENTICATED USER
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   try {
     const user = await UserModel.findByPk(req.session.user_id, {
-      attributes: { exclude: ["password"] },
+      attributes: { exclude: ["user_password"] },
     });
     res.status(200).json(user);
   } catch (error) {
     next(error);
   }
 };
+//#endregion AUTHENTICATED USER
 
-// SignUp
+//#region SIGNUP
 interface SignUpBody {
   user_name?: string;
   password?: string;
@@ -89,14 +91,7 @@ export const signUp: RequestHandler<
           throw createHttpError(503, "Verified mail could not be sent");
         }
 
-        const response = {
-          user_id: newUser.user_id,
-          user_name: newUser.user_name,
-          user_email: newUser.user_email,
-          user_authority_id: newUser.user_authority_id,
-          mailSend: data ? true:false,
-        };
-        res.status(201).json(response);
+        res.status(201).json(createResponseFromUser(newUser, data));
       }
     } else {
       const passwordHashed = await bcrypt.hash(passwordRaw, 10);
@@ -107,19 +102,15 @@ export const signUp: RequestHandler<
       });
 
       req.session.user_id = newUser.user_id;
-      const response = {
-        user_id: newUser.user_id,
-        user_authority_id: newUser.user_authority_id,
-        mailSend: false,
-      };
-      res.status(201).json(response);
+      res.status(201).json(createResponseFromUser(newUser));
     }
   } catch (error) {
     next(error);
   }
 };
+//#endregion SIGNUP
 
-// SIGNIN WITH GOOGLE
+//#region SIGNIN WITH GOOGLE
 interface SignInGoogleBody {
   user_name?: string;
   email?: string;
@@ -199,25 +190,9 @@ export const signInGoogle: RequestHandler<
     next(error);
   }
 };
+//#endregion SIGNIN WITH GOOGLE
 
-async function generateUniqueUsername(baseUsername: string) {
-  let uniqueUsername = baseUsername;
-  let userExists = true;
-  while (userExists) {
-    const user = await UserModel.findOne({
-      where: { user_name: uniqueUsername },
-    });
-    if (!user) {
-      userExists = false;
-    } else {
-      const randomNum = Math.floor(Math.random() * 1000); // 0 ile 999 arasında rastgele bir sayı
-      uniqueUsername = `${baseUsername}${randomNum}`;
-    }
-  }
-  return uniqueUsername;
-}
-
-// LOGIN
+//#region LOGIN
 interface LoginBody {
   user_name?: string;
   password?: string;
@@ -236,25 +211,49 @@ export const login: RequestHandler<
       throw createHttpError(400, "Missing parameters");
     }
 
-    const user = await UserModel.findOne({ where: { user_name: user_name } });
-    if (!user) {
-      throw createHttpError(401, "Invalid credentials");
+    const emailRegex =
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+    //if user try login with email
+    if (emailRegex.test(user_name)) {
+      const user = await UserModel.findOne({
+        where: { user_email: user_name, user_email_verified: true },
+      });
+      if (!user) {
+        throw createHttpError(401, "Invalid credentials");
+      }
+
+      const passwordMatch = await bcrypt.compare(password, user.user_password);
+
+      if (!passwordMatch) {
+        throw createHttpError(401, "Invalid credentials");
+      }
+
+      req.session.user_id = user.user_id;
+      res.status(201).json(createResponseFromUser(user));
+    } else {
+      //if user try login with user name
+      const user = await UserModel.findOne({ where: { user_name: user_name } });
+      if (!user) {
+        throw createHttpError(401, "Invalid credentials");
+      }
+
+      const passwordMatch = await bcrypt.compare(password, user.user_password);
+
+      if (!passwordMatch) {
+        throw createHttpError(401, "Invalid credentials");
+      }
+
+      req.session.user_id = user.user_id;
+      res.status(201).json(createResponseFromUser(user));
     }
-
-    const passwordMatch = await bcrypt.compare(password, user.user_password);
-
-    if (!passwordMatch) {
-      throw createHttpError(401, "Invalid credentials");
-    }
-
-    req.session.user_id = user.user_id;
-    res.status(201).json(user);
   } catch (error) {
     next(error);
   }
 };
+//#endregion LOGIN
 
-// LOGOUT
+//#region LOGOUT
 export const logout: RequestHandler = (req, res, next) => {
   req.session.destroy((error) => {
     if (error) {
@@ -264,53 +263,9 @@ export const logout: RequestHandler = (req, res, next) => {
     }
   });
 };
+//#endregion LOGOUT
 
-// RESET USER PASSWORD
-// interface ResetBody {
-//   userInputValue?: string;
-// }
-// export const resetUser: RequestHandler<
-//   unknown,
-//   unknown,
-//   ResetBody,
-//   unknown
-// > = async (req, res, next) => {
-//   const userInputValue = req.body.userInputValue;
-
-//   try {
-//     if (!userInputValue) {
-//       throw createHttpError(400, "Missing parameters");
-//     }
-
-//     //if user send email ve should check so we search '@' and '.' characters
-//     const isEmail =
-//       userInputValue.includes("@") && userInputValue.includes(".");
-
-//     if (isEmail) {
-//       const user = await UserModel.findOne({
-//         where: { email: userInputValue },
-//       });
-
-//       if (!user) {
-//         throw createHttpError(404, "User does not exist");
-//       }
-
-//       res.sendStatus(200);
-//     } else {
-//       console.log("buraya geliyorsa sorun var");
-//       const user = await UserModel.findOne({
-//         where: { user_name: userInputValue },
-//       });
-//       if (!user) {
-//         throw createHttpError(404, "User does not exist");
-//       }
-//       res.sendStatus(200);
-//     }
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
+//#region EMAIL VERIFIED
 interface EmailVerifiedBody {
   token?: string;
 }
@@ -355,7 +310,9 @@ export const emailVerified: RequestHandler<
     next(error);
   }
 };
+//#endregion EMAIL VERIFIED
 
+//#region RESET PASSWORD
 export const resetPassword: RequestHandler = async (req, res, next) => {
   const email = req.params.user_email;
 
@@ -398,3 +355,45 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion RESET PASSWORD
+
+//#region FUNCTION
+interface userResponseParam {
+  user_id:number;
+  user_name: string;
+  user_password: string;
+  user_email?: string;
+  user_authority_id?: number;
+  user_email_verified?: boolean;
+  user_google_id?: number;
+}
+function createResponseFromUser(user: userResponseParam, mailData?: object | null) {
+  return {
+    user_id: user.user_id,
+    user_name: user.user_name,
+    user_email: user.user_email,
+    user_authority_id: user.user_authority_id,
+    user_email_verified: user.user_email_verified,
+    user_google_id: user.user_google_id,
+    mailSend: mailData ? true : false,
+  };
+}
+
+async function generateUniqueUsername(baseUsername: string) {
+  let uniqueUsername = baseUsername;
+  let userExists = true;
+  while (userExists) {
+    const user = await UserModel.findOne({
+      where: { user_name: uniqueUsername },
+    });
+    if (!user) {
+      userExists = false;
+    } else {
+      const randomNum = Math.floor(Math.random() * 1000); // 0 ile 999 arasında rastgele bir sayı
+      uniqueUsername = `${baseUsername}${randomNum}`;
+    }
+  }
+  return uniqueUsername;
+}
+
+//#endregion FUNCTION
