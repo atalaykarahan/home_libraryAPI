@@ -52,7 +52,7 @@ export const signUp: RequestHandler<
     // if user send a email check exists same email
     if (email) {
       const existingEmail = await UserModel.findOne({
-        where: { email: email },
+        where: { user_email: email, user_email_verified: true },
       });
       if (existingEmail) {
         throw createHttpError(
@@ -64,8 +64,8 @@ export const signUp: RequestHandler<
 
         const newUser = await UserModel.create({
           user_name: user_name,
-          password: passwordHashed,
-          authority_id: 1,
+          user_password: passwordHashed,
+          user_email: email,
         });
 
         req.session.user_id = newUser.user_id;
@@ -75,8 +75,6 @@ export const signUp: RequestHandler<
         };
 
         const token = jwt.sign(obj, env.JWT_SECRET_RSA, { expiresIn: "5m" });
-        console.log(token);
-
         const confirmLink = `http://localhost:3000/new-verification?token=${token}`;
         const resend = new Resend(env.RESEND_API_KEY);
         const { data, error } = await resend.emails.send({
@@ -91,20 +89,30 @@ export const signUp: RequestHandler<
           throw createHttpError(503, "Verified mail could not be sent");
         }
 
-        console.log("e postadan dönen data ", data);
-        res.status(201).json(newUser);
+        const response = {
+          user_id: newUser.user_id,
+          user_name: newUser.user_name,
+          user_email: newUser.user_email,
+          user_authority_id: newUser.user_authority_id,
+          mailSend: data ? true:false,
+        };
+        res.status(201).json(response);
       }
     } else {
       const passwordHashed = await bcrypt.hash(passwordRaw, 10);
 
       const newUser = await UserModel.create({
         user_name: user_name,
-        password: passwordHashed,
-        authority_id: 1,
+        user_password: passwordHashed,
       });
 
       req.session.user_id = newUser.user_id;
-      res.status(201).json(newUser);
+      const response = {
+        user_id: newUser.user_id,
+        user_authority_id: newUser.user_authority_id,
+        mailSend: false,
+      };
+      res.status(201).json(response);
     }
   } catch (error) {
     next(error);
@@ -134,7 +142,7 @@ export const signInGoogle: RequestHandler<
 
     // böyle bir user var mı diye kontrol
     const user = await UserModel.findOne({
-      where: { email: email },
+      where: { user_email: email },
     });
 
     //eğer böyle bir posta yok ise kullanıcı adını kontrol et ve oluştur
@@ -148,9 +156,9 @@ export const signInGoogle: RequestHandler<
       if (!checkUserName) {
         const newUser = await UserModel.create({
           user_name: user_name,
-          password: passwordHashed,
-          email: email,
-          authority_id: 1,
+          user_password: passwordHashed,
+          user_email: email,
+          user_authority_id: 1,
         });
         req.session.user_id = newUser.user_id;
         res.status(201).json(newUser);
@@ -160,9 +168,9 @@ export const signInGoogle: RequestHandler<
         const new_user_name = await generateUniqueUsername(user_name);
         const newUser = await UserModel.create({
           user_name: new_user_name,
-          password: passwordHashed,
-          email: email,
-          authority_id: 1,
+          user_password: passwordHashed,
+          user_email: email,
+          user_authority_id: 1,
         });
         req.session.user_id = newUser.user_id;
         res.status(201).json(newUser);
@@ -172,7 +180,10 @@ export const signInGoogle: RequestHandler<
     } else {
       //eğer böyle bir user var ise şifre eşleşme
       console.log("şifresi şu-->", passwordRaw);
-      const passwordMatch = await bcrypt.compare(passwordRaw, user.password);
+      const passwordMatch = await bcrypt.compare(
+        passwordRaw,
+        user.user_password
+      );
 
       if (!passwordMatch) {
         throw createHttpError(
@@ -230,7 +241,7 @@ export const login: RequestHandler<
       throw createHttpError(401, "Invalid credentials");
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
+    const passwordMatch = await bcrypt.compare(password, user.user_password);
 
     if (!passwordMatch) {
       throw createHttpError(401, "Invalid credentials");
@@ -255,50 +266,50 @@ export const logout: RequestHandler = (req, res, next) => {
 };
 
 // RESET USER PASSWORD
-interface ResetBody {
-  userInputValue?: string;
-}
-export const resetUser: RequestHandler<
-  unknown,
-  unknown,
-  ResetBody,
-  unknown
-> = async (req, res, next) => {
-  const userInputValue = req.body.userInputValue;
+// interface ResetBody {
+//   userInputValue?: string;
+// }
+// export const resetUser: RequestHandler<
+//   unknown,
+//   unknown,
+//   ResetBody,
+//   unknown
+// > = async (req, res, next) => {
+//   const userInputValue = req.body.userInputValue;
 
-  try {
-    if (!userInputValue) {
-      throw createHttpError(400, "Missing parameters");
-    }
+//   try {
+//     if (!userInputValue) {
+//       throw createHttpError(400, "Missing parameters");
+//     }
 
-    //if user send email ve should check so we search '@' and '.' characters
-    const isEmail =
-      userInputValue.includes("@") && userInputValue.includes(".");
+//     //if user send email ve should check so we search '@' and '.' characters
+//     const isEmail =
+//       userInputValue.includes("@") && userInputValue.includes(".");
 
-    if (isEmail) {
-      const user = await UserModel.findOne({
-        where: { email: userInputValue },
-      });
+//     if (isEmail) {
+//       const user = await UserModel.findOne({
+//         where: { email: userInputValue },
+//       });
 
-      if (!user) {
-        throw createHttpError(404, "User does not exist");
-      }
+//       if (!user) {
+//         throw createHttpError(404, "User does not exist");
+//       }
 
-      res.sendStatus(200);
-    } else {
-      console.log("buraya geliyorsa sorun var");
-      const user = await UserModel.findOne({
-        where: { user_name: userInputValue },
-      });
-      if (!user) {
-        throw createHttpError(404, "User does not exist");
-      }
-      res.sendStatus(200);
-    }
-  } catch (error) {
-    next(error);
-  }
-};
+//       res.sendStatus(200);
+//     } else {
+//       console.log("buraya geliyorsa sorun var");
+//       const user = await UserModel.findOne({
+//         where: { user_name: userInputValue },
+//       });
+//       if (!user) {
+//         throw createHttpError(404, "User does not exist");
+//       }
+//       res.sendStatus(200);
+//     }
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 interface EmailVerifiedBody {
   token?: string;
@@ -327,7 +338,7 @@ export const emailVerified: RequestHandler<
         throw createHttpError(401, "Invalid credentials");
       }
 
-      user.email = decoded.email;
+      user.user_email = decoded.email;
       user.user_email_verified = true;
       await user.save();
 
@@ -336,13 +347,54 @@ export const emailVerified: RequestHandler<
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       // When token has been expired we have a custom error message for that
-      return res
-        .status(401)
-        .json({
-          error:
-            "Your token has been expired. Please try again verification process.",
-        });
+      return res.status(401).json({
+        error:
+          "Your token has been expired. Please try again verification process.",
+      });
     }
+    next(error);
+  }
+};
+
+export const resetPassword: RequestHandler = async (req, res, next) => {
+  const email = req.params.user_email;
+
+  try {
+    if (!email) {
+      throw createHttpError(400, "Missing parameters");
+      // throw createHttpError(404, "Mail does not exist");
+    }
+
+    const user = await UserModel.findOne({
+      where: { user_email: email },
+    });
+
+    if (!user) throw createHttpError(404, "Mail does not exist");
+
+    if (!user.user_email) throw createHttpError(404, "Mail does not exist");
+
+    const tokenObj = {
+      id: user.user_id,
+      email: user.user_email,
+    };
+
+    const token = jwt.sign(tokenObj, env.JWT_PASSWORD_RESET, {
+      expiresIn: "5m",
+    });
+    const confirmLink = `${env.WEBSITE_URL}/burayabirşeydüşünadamneyapmışbak?token=${token}`;
+    const resend = new Resend(env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({
+      from: "Acme <onboarding@resend.dev>",
+      to: user.user_email,
+      subject: "Şifreni sıfırla",
+      html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
+    });
+
+    if (error) {
+      console.log("verified mail error: ", error);
+      throw createHttpError(503, "Reset mail could not be sent");
+    }
+  } catch (error) {
     next(error);
   }
 };

@@ -14,9 +14,9 @@ interface UserInstance
   > {
   user_id: CreationOptional<number>;
   user_name: string;
-  password: string;
-  email?: string;
-  authority_id: number;
+  user_password: string;
+  user_email?: string;
+  user_authority_id?: number;
   user_email_verified?: boolean;
   user_google_id?: number;
 }
@@ -34,18 +34,18 @@ const User = db.define<UserInstance>(
       allowNull: false,
       unique: true,
     },
-    password: {
+    user_password: {
       type: DataTypes.STRING,
       allowNull: false,
     },
-    email: {
+    user_email: {
       type: DataTypes.STRING,
       allowNull: true,
       unique: true,
     },
-    authority_id: {
+    user_authority_id: {
       type: DataTypes.BIGINT,
-      allowNull: false,
+      allowNull: true,
     },
     user_email_verified: {
       type: DataTypes.BOOLEAN,
