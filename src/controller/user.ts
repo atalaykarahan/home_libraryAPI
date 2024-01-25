@@ -322,14 +322,18 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
       // throw createHttpError(404, "Mail does not exist");
     }
 
-    //if user use email
-    if (isEmail(userInputValue)) {
-      console.log("user e postası ile istek yolladı");
-
-      const user = await UserModel.findOne({
+      let user = await UserModel.findOne({
         where: { user_email: userInputValue, user_email_verified: true },
       });
 
+      if(!user){
+        user = await UserModel.findOne({
+          where: { user_name: userInputValue, user_email_verified: true },
+        });
+      }
+
+     
+
       if (!user || !user.user_email)
         throw createHttpError(404, "Mail does not exist");
 
@@ -356,40 +360,7 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
       }
 
       res.sendStatus(200);
-    } else {
-      //if user use userName
-
-      const user = await UserModel.findOne({
-        where: { user_name: userInputValue, user_email_verified: true },
-      });
-
-      if (!user || !user.user_email)
-        throw createHttpError(404, "Mail does not exist");
-
-      const tokenObj = {
-        id: user.user_id,
-        email: user.user_email,
-      };
-
-      const token = jwt.sign(tokenObj, env.JWT_PASSWORD_RESET, {
-        expiresIn: "5m",
-      });
-      const confirmLink = `${env.WEBSITE_URL}/burayabirşeydüşünadamneyapmışbak?token=${token}`;
-      const resend = new Resend(env.RESEND_API_KEY);
-      const { error } = await resend.emails.send({
-        from: "Acme <onboarding@resend.dev>",
-        to: user.user_email,
-        subject: "Şifreni sıfırla",
-        html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
-      });
-
-      if (error) {
-        console.log("verified mail error: ", error);
-        throw createHttpError(503, "Reset mail could not be sent");
-      }
-
-      res.sendStatus(200);
-    }
+  
   } catch (error) {
     next(error);
   }
@@ -438,9 +409,9 @@ async function generateUniqueUsername(baseUsername: string) {
   return uniqueUsername;
 }
 
-function isEmail(inputValue: string) {
-  const regex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-  return regex.test(inputValue);
-}
+// function isEmail(inputValue: string) {
+//   const regex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+//   return regex.test(inputValue);
+// }
 
 //#endregion FUNCTIONS
