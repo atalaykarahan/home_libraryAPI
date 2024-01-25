@@ -10,6 +10,6 @@ router.post("/login", UserController.login);
 router.post("/login/google", UserController.signInGoogle);
 router.post("/logout", UserController.logout);
 router.post("/email-verified", UserController.emailVerified);
-router.get("/:user_email", UserController.resetPassword);
+router.get("/:userInputValue", UserController.resetPassword);
 
 export default router;

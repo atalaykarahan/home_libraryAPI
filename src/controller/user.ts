@@ -314,42 +314,81 @@ export const emailVerified: RequestHandler<
 
 //#region RESET PASSWORD
 export const resetPassword: RequestHandler = async (req, res, next) => {
-  const email = req.params.user_email;
+  const userInputValue = req.params.userInputValue;
 
   try {
-    if (!email) {
+    if (!userInputValue) {
       throw createHttpError(400, "Missing parameters");
       // throw createHttpError(404, "Mail does not exist");
     }
 
-    const user = await UserModel.findOne({
-      where: { user_email: email },
-    });
+    //if user use email
+    if (isEmail(userInputValue)) {
+      console.log("user e postası ile istek yolladı");
 
-    if (!user) throw createHttpError(404, "Mail does not exist");
+      const user = await UserModel.findOne({
+        where: { user_email: userInputValue, user_email_verified: true },
+      });
 
-    if (!user.user_email) throw createHttpError(404, "Mail does not exist");
+      if (!user || !user.user_email)
+        throw createHttpError(404, "Mail does not exist");
 
-    const tokenObj = {
-      id: user.user_id,
-      email: user.user_email,
-    };
+      const tokenObj = {
+        id: user.user_id,
+        email: user.user_email,
+      };
 
-    const token = jwt.sign(tokenObj, env.JWT_PASSWORD_RESET, {
-      expiresIn: "5m",
-    });
-    const confirmLink = `${env.WEBSITE_URL}/burayabirşeydüşünadamneyapmışbak?token=${token}`;
-    const resend = new Resend(env.RESEND_API_KEY);
-    const { error } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
-      to: user.user_email,
-      subject: "Şifreni sıfırla",
-      html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
-    });
+      const token = jwt.sign(tokenObj, env.JWT_PASSWORD_RESET, {
+        expiresIn: "5m",
+      });
+      const confirmLink = `${env.WEBSITE_URL}/burayabirşeydüşünadamneyapmışbak?token=${token}`;
+      const resend = new Resend(env.RESEND_API_KEY);
+      const { error } = await resend.emails.send({
+        from: "Acme <onboarding@resend.dev>",
+        to: user.user_email,
+        subject: "Şifreni sıfırla",
+        html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
+      });
 
-    if (error) {
-      console.log("verified mail error: ", error);
-      throw createHttpError(503, "Reset mail could not be sent");
+      if (error) {
+        console.log("verified mail error: ", error);
+        throw createHttpError(503, "Reset mail could not be sent");
+      }
+
+      res.sendStatus(200);
+    } else {
+      //if user use userName
+
+      const user = await UserModel.findOne({
+        where: { user_name: userInputValue, user_email_verified: true },
+      });
+
+      if (!user || !user.user_email)
+        throw createHttpError(404, "Mail does not exist");
+
+      const tokenObj = {
+        id: user.user_id,
+        email: user.user_email,
+      };
+
+      const token = jwt.sign(tokenObj, env.JWT_PASSWORD_RESET, {
+        expiresIn: "5m",
+      });
+      const confirmLink = `${env.WEBSITE_URL}/burayabirşeydüşünadamneyapmışbak?token=${token}`;
+      const resend = new Resend(env.RESEND_API_KEY);
+      const { error } = await resend.emails.send({
+        from: "Acme <onboarding@resend.dev>",
+        to: user.user_email,
+        subject: "Şifreni sıfırla",
+        html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
+      });
+
+      if (error) {
+        console.log("verified mail error: ", error);
+        throw createHttpError(503, "Reset mail could not be sent");
+      }
+
+      res.sendStatus(200);
     }
   } catch (error) {
     next(error);
@@ -357,9 +396,9 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
 };
 //#endregion RESET PASSWORD
 
-//#region FUNCTION
+//#region FUNCTIONS
 interface userResponseParam {
-  user_id:number;
+  user_id: number;
   user_name: string;
   user_password: string;
   user_email?: string;
@@ -367,7 +406,10 @@ interface userResponseParam {
   user_email_verified?: boolean;
   user_google_id?: number;
 }
-function createResponseFromUser(user: userResponseParam, mailData?: object | null) {
+function createResponseFromUser(
+  user: userResponseParam,
+  mailData?: object | null
+) {
   return {
     user_id: user.user_id,
     user_name: user.user_name,
@@ -396,4 +438,9 @@ async function generateUniqueUsername(baseUsername: string) {
   return uniqueUsername;
 }
 
-//#endregion FUNCTION
+function isEmail(inputValue: string) {
+  const regex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+  return regex.test(inputValue);
+}
+
+//#endregion FUNCTIONS
