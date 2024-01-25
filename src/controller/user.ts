@@ -284,9 +284,6 @@ export const emailVerified: RequestHandler<
     const decoded = jwt.verify(incomingToken, env.JWT_SECRET_RSA);
 
     if (decoded && typeof decoded !== "string") {
-      console.log("token doğrulandı");
-      console.log(decoded);
-
       const user = await UserModel.findByPk(decoded.id);
 
       if (!user) {
@@ -322,50 +319,102 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
       // throw createHttpError(404, "Mail does not exist");
     }
 
-      let user = await UserModel.findOne({
-        where: { user_email: userInputValue, user_email_verified: true },
+    let user = await UserModel.findOne({
+      where: { user_email: userInputValue, user_email_verified: true },
+    });
+
+    if (!user) {
+      user = await UserModel.findOne({
+        where: { user_name: userInputValue, user_email_verified: true },
       });
+    }
 
-      if(!user){
-        user = await UserModel.findOne({
-          where: { user_name: userInputValue, user_email_verified: true },
-        });
-      }
+    if (!user || !user.user_email)
+      throw createHttpError(404, "Mail does not exist");
 
-     
+    const tokenObj = {
+      id: user.user_id,
+      email: user.user_email,
+    };
 
-      if (!user || !user.user_email)
-        throw createHttpError(404, "Mail does not exist");
+    const token = jwt.sign(tokenObj, env.JWT_PASSWORD_RESET, {
+      expiresIn: "5m",
+    });
+    const confirmLink = `${env.WEBSITE_URL}/new-password?token=${token}`;
+    const resend = new Resend(env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({
+      from: "Acme <onboarding@resend.dev>",
+      to: user.user_email,
+      subject: "Şifreni sıfırla",
+      html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
+    });
 
-      const tokenObj = {
-        id: user.user_id,
-        email: user.user_email,
-      };
+    if (error) {
+      console.log("verified mail error: ", error);
+      throw createHttpError(503, "Reset mail could not be sent");
+    }
 
-      const token = jwt.sign(tokenObj, env.JWT_PASSWORD_RESET, {
-        expiresIn: "5m",
-      });
-      const confirmLink = `${env.WEBSITE_URL}/burayabirşeydüşünadamneyapmışbak?token=${token}`;
-      const resend = new Resend(env.RESEND_API_KEY);
-      const { error } = await resend.emails.send({
-        from: "Acme <onboarding@resend.dev>",
-        to: user.user_email,
-        subject: "Şifreni sıfırla",
-        html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
-      });
-
-      if (error) {
-        console.log("verified mail error: ", error);
-        throw createHttpError(503, "Reset mail could not be sent");
-      }
-
-      res.sendStatus(200);
-  
+    res.sendStatus(200);
   } catch (error) {
     next(error);
   }
 };
 //#endregion RESET PASSWORD
+
+//#region NEW PASSWORD
+interface NewPasswordBody {
+  password?: string;
+  token?: string;
+}
+export const newPassword: RequestHandler<
+  unknown,
+  unknown,
+  NewPasswordBody,
+  unknown
+> = async (req, res, next) => {
+  const password = req.body.password;
+  const token = req.body.token;
+
+  try {
+    if (!token || !password) throw createHttpError(400, "Missing parameters");
+
+    const decoded = jwt.verify(token, env.JWT_PASSWORD_RESET);
+
+    if (decoded && typeof decoded !== "string") {
+      console.log("Token doğrulandı ->", decoded);
+      console.log("kullanıcının verdiği şifre ->", password);
+
+      const user = await UserModel.findOne({
+        where: {
+          user_id: decoded.id,
+          user_email: decoded.email,
+          user_email_verified: true,
+        },
+      });
+
+      if (!user) throw createHttpError(401, "User not found!");
+
+      user.user_password = password;
+      await user.save();
+      
+      res.status(201).json({ message: "Password successfully changed." });
+    } else {
+      //invalid token error
+      throw createHttpError(503, "Server error");
+    }
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      // When token has been expired we have a custom error message for that
+      return res.status(401).json({
+        error:
+          "Your token has been expired. Please try again verification process.",
+      });
+    }
+    next(error);
+  }
+};
+
+//#endregion
 
 //#region FUNCTIONS
 interface userResponseParam {
