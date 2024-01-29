@@ -113,8 +113,9 @@ export const signUp: RequestHandler<
 //#region SIGNIN WITH GOOGLE
 interface SignInGoogleBody {
   user_name?: string;
+  user_google_id?: number;
   email?: string;
-  password?: string;
+  // password?: string;
 }
 export const signInGoogle: RequestHandler<
   unknown,
@@ -124,31 +125,38 @@ export const signInGoogle: RequestHandler<
 > = async (req, res, next) => {
   const user_name = req.body.user_name;
   const email = req.body.email;
-  const passwordRaw = req.body.password;
+  // const passwordRaw = req.body.password;
+  const googleId = req.body.user_google_id;
+  console.log("google id",googleId);
+  // console.log("passwordRaw ",passwordRaw);
+  console.log("email",email);
+  console.log("user_name",user_name);
 
   try {
-    if (!user_name || !passwordRaw || !email) {
+    if (!user_name || !email || !googleId) {
       throw createHttpError(400, "Missing parameters");
     }
 
     // böyle bir user var mı diye kontrol
     const user = await UserModel.findOne({
-      where: { user_email: email },
+      where: { user_email: email, user_email_verified: true },
     });
 
-    //eğer böyle bir posta yok ise kullanıcı adını kontrol et ve oluştur
+    //eğer böyle bir posta yok veya dogrulanmamis ise kullanıcı adını kontrol et ve oluştur
     if (!user) {
       const checkUserName = await UserModel.findOne({
         where: { user_name: user_name },
       });
 
-      const passwordHashed = await bcrypt.hash(passwordRaw, 10);
+      // const passwordHashed = await bcrypt.hash(passwordRaw, 10);
       //böyle bir username yok ise
       if (!checkUserName) {
         const newUser = await UserModel.create({
           user_name: user_name,
-          user_password: passwordHashed,
+          user_password: googleId.toString(),
           user_email: email,
+          user_email_verified: true,
+          user_google_id: googleId,
           user_authority_id: 1,
         });
         req.session.user_id = newUser.user_id;
@@ -159,8 +167,10 @@ export const signInGoogle: RequestHandler<
         const new_user_name = await generateUniqueUsername(user_name);
         const newUser = await UserModel.create({
           user_name: new_user_name,
-          user_password: passwordHashed,
+          user_password: googleId?.toString(),
           user_email: email,
+          user_email_verified:true,
+          user_google_id: googleId,
           user_authority_id: 1,
         });
         req.session.user_id = newUser.user_id;
@@ -169,23 +179,31 @@ export const signInGoogle: RequestHandler<
 
       // throw createHttpError(401, "Invalid credentials");
     } else {
-      //eğer böyle bir user var ise şifre eşleşme
-      console.log("şifresi şu-->", passwordRaw);
-      const passwordMatch = await bcrypt.compare(
-        passwordRaw,
-        user.user_password
-      );
-
-      if (!passwordMatch) {
-        throw createHttpError(
-          401,
-          "This email address is already registered. Please try logging in or use a different email."
-        );
-      }
-
-      req.session.user_id = user.user_id;
+         req.session.user_id = user.user_id;
+         if(!user.user_google_id){
+          user.user_google_id = googleId;
+          await user.save();
+         } 
       res.status(201).json(user);
     }
+    // else {
+    //   //eğer böyle bir user var ise şifre eşleşme
+    //   console.log("şifresi şu-->", passwordRaw);
+    //   const passwordMatch = await bcrypt.compare(
+    //     passwordRaw,
+    //     user.user_password
+    //   );
+
+    //   if (!passwordMatch) {
+    //     throw createHttpError(
+    //       401,
+    //       "This email address is already registered. Please try logging in or use a different email."
+    //     );
+    //   }
+
+    //   req.session.user_id = user.user_id;
+    //   res.status(201).json(user);
+    // }
   } catch (error) {
     next(error);
   }
@@ -396,7 +414,7 @@ export const newPassword: RequestHandler<
 
       user.user_password = password;
       await user.save();
-      
+
       res.status(201).json({ message: "Password successfully changed." });
     } else {
       //invalid token error

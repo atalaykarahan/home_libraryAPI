@@ -52,7 +52,7 @@ const User = db.define<UserInstance>(
       allowNull: true,
     },
     user_google_id: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.NUMBER,
       allowNull: true,
     },
   },
