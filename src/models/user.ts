@@ -15,7 +15,7 @@ interface UserInstance
   user_id: CreationOptional<number>;
   user_name: string;
   user_password: string;
-  user_email?: string;
+  user_email: string;
   user_authority_id?: number;
   user_email_verified?: boolean;
   user_google_id?: number;

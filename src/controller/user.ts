@@ -117,11 +117,12 @@ export const login: RequestHandler<
     //if user try to login with google account
     if (google_id) {
       const user = await UserModel.findOne({
-        where: { user_google_id: google_id },
+        where: { user_google_id: parseInt(google_id) },
       });
 
       // if google id user exist
       if (user) {
+        console.log("normalde sadece buraya düşmeli yani bu google id değerine sahip bir user var ve o user'ı dönmeli")
         req.session.user_id = user.user_id;
         res.status(201).json(createResponseFromUser(user));
       } else {
@@ -131,6 +132,7 @@ export const login: RequestHandler<
 
         //if email exist
         if (user) {
+          console.log("buraya düştü");
           user.user_google_id = parseInt(google_id);
           await user.save();
           req.session.user_id = user.user_id;
