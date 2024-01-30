@@ -36,7 +36,7 @@ export const signUp: RequestHandler<
   const email = req.body.email;
 
   try {
-    if (!user_name || !passwordRaw) {
+    if (!user_name || !passwordRaw || !email) {
       throw createHttpError(400, "Missing parameters");
     }
 
@@ -44,6 +44,7 @@ export const signUp: RequestHandler<
     const existingUsername = await UserModel.findOne({
       where: { user_name: user_name },
     });
+
     if (existingUsername) {
       throw createHttpError(
         409,
@@ -51,169 +52,51 @@ export const signUp: RequestHandler<
       );
     }
 
-    // if user send a email check exists same email
-    if (email) {
-      const existingEmail = await UserModel.findOne({
-        where: { user_email: email, user_email_verified: true },
-      });
-      if (existingEmail) {
-        throw createHttpError(
-          409,
-          "A user with this email adress already exists. Please log in instead."
-        );
-      } else {
-        const passwordHashed = await bcrypt.hash(passwordRaw, 10);
+    const existingEmail = await UserModel.findOne({
+      where: { user_email: email, user_email_verified: true },
+    });
 
-        const newUser = await UserModel.create({
-          user_name: user_name,
-          user_password: passwordHashed,
-          user_email: email,
-        });
-
-        req.session.user_id = newUser.user_id;
-        const obj = {
-          id: newUser.user_id,
-          email: email,
-        };
-
-        const token = jwt.sign(obj, env.JWT_SECRET_RSA, { expiresIn: "5m" });
-        const confirmLink = `http://localhost:3000/new-verification?token=${token}`;
-        const resend = new Resend(env.RESEND_API_KEY);
-        const { data, error } = await resend.emails.send({
-          from: "Acme <onboarding@resend.dev>",
-          to: email,
-          subject: "E postanı onayla",
-          html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
-        });
-
-        if (error) {
-          console.log("verified mail error: ", error);
-          throw createHttpError(503, "Verified mail could not be sent");
-        }
-
-        res.status(201).json(createResponseFromUser(newUser, data));
-      }
-    } else {
-      const passwordHashed = await bcrypt.hash(passwordRaw, 10);
-
-      const newUser = await UserModel.create({
-        user_name: user_name,
-        user_password: passwordHashed,
-      });
-
-      req.session.user_id = newUser.user_id;
-      res.status(201).json(createResponseFromUser(newUser));
+    if (existingEmail) {
+      throw createHttpError(
+        409,
+        "A user with this email adress already exists. Please log in instead."
+      );
     }
+
+    const obj = {
+      user_name: user_name,
+      email: email,
+      password: passwordRaw,
+    };
+
+    const token = jwt.sign(obj, env.JWT_SECRET_RSA, { expiresIn: "5m" });
+    const confirmLink = `http://localhost:3000/new-verification?token=${token}`;
+    const resend = new Resend(env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({
+      from: "Acme <onboarding@resend.dev>",
+      to: email,
+      subject: "Hesabını onayla",
+      html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
+    });
+
+    if (error) {
+      console.log("verified mail error: ", error);
+      throw createHttpError(503, "Verified mail could not be sent");
+    }
+
+    res.status(201).json({ message: "mail sent" });
   } catch (error) {
     next(error);
   }
 };
 //#endregion SIGNUP
 
-//#region SIGNIN WITH GOOGLE
-interface SignInGoogleBody {
-  user_name?: string;
-  user_google_id?: number;
-  email?: string;
-  // password?: string;
-}
-export const signInGoogle: RequestHandler<
-  unknown,
-  unknown,
-  SignInGoogleBody,
-  unknown
-> = async (req, res, next) => {
-  const user_name = req.body.user_name;
-  const email = req.body.email;
-  // const passwordRaw = req.body.password;
-  const googleId = req.body.user_google_id;
-  console.log("google id",googleId);
-  // console.log("passwordRaw ",passwordRaw);
-  console.log("email",email);
-  console.log("user_name",user_name);
-
-  try {
-    if (!user_name || !email || !googleId) {
-      throw createHttpError(400, "Missing parameters");
-    }
-
-    // böyle bir user var mı diye kontrol
-    const user = await UserModel.findOne({
-      where: { user_email: email, user_email_verified: true },
-    });
-
-    //eğer böyle bir posta yok veya dogrulanmamis ise kullanıcı adını kontrol et ve oluştur
-    if (!user) {
-      const checkUserName = await UserModel.findOne({
-        where: { user_name: user_name },
-      });
-
-      // const passwordHashed = await bcrypt.hash(passwordRaw, 10);
-      //böyle bir username yok ise
-      if (!checkUserName) {
-        const newUser = await UserModel.create({
-          user_name: user_name,
-          user_password: googleId.toString(),
-          user_email: email,
-          user_email_verified: true,
-          user_google_id: googleId,
-          user_authority_id: 1,
-        });
-        req.session.user_id = newUser.user_id;
-        res.status(201).json(newUser);
-      } else {
-        //böyle bir user_name var ancak e posta yok yani user yaratıcaksın
-        //ancak adı farklı olmalı
-        const new_user_name = await generateUniqueUsername(user_name);
-        const newUser = await UserModel.create({
-          user_name: new_user_name,
-          user_password: googleId?.toString(),
-          user_email: email,
-          user_email_verified:true,
-          user_google_id: googleId,
-          user_authority_id: 1,
-        });
-        req.session.user_id = newUser.user_id;
-        res.status(201).json(newUser);
-      }
-
-      // throw createHttpError(401, "Invalid credentials");
-    } else {
-         req.session.user_id = user.user_id;
-         if(!user.user_google_id){
-          user.user_google_id = googleId;
-          await user.save();
-         } 
-      res.status(201).json(user);
-    }
-    // else {
-    //   //eğer böyle bir user var ise şifre eşleşme
-    //   console.log("şifresi şu-->", passwordRaw);
-    //   const passwordMatch = await bcrypt.compare(
-    //     passwordRaw,
-    //     user.user_password
-    //   );
-
-    //   if (!passwordMatch) {
-    //     throw createHttpError(
-    //       401,
-    //       "This email address is already registered. Please try logging in or use a different email."
-    //     );
-    //   }
-
-    //   req.session.user_id = user.user_id;
-    //   res.status(201).json(user);
-    // }
-  } catch (error) {
-    next(error);
-  }
-};
-//#endregion SIGNIN WITH GOOGLE
-
 //#region LOGIN
 interface LoginBody {
   user_name?: string;
   password?: string;
+  email: string;
+  google_id?: string;
 }
 export const login: RequestHandler<
   unknown,
@@ -223,48 +106,118 @@ export const login: RequestHandler<
 > = async (req, res, next) => {
   const user_name = req.body.user_name;
   const password = req.body.password;
+  const email = req.body.email;
+  const google_id = req.body.google_id;
 
   try {
     if (!user_name || !password) {
       throw createHttpError(400, "Missing parameters");
     }
 
-    const emailRegex =
-      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-
-    //if user try login with email
-    if (emailRegex.test(user_name)) {
+    //if user try to login with google account
+    if (google_id) {
       const user = await UserModel.findOne({
-        where: { user_email: user_name, user_email_verified: true },
+        where: { user_google_id: google_id },
       });
-      if (!user) {
-        throw createHttpError(401, "Invalid credentials");
+
+      // if google id user exist
+      if (user) {
+        req.session.user_id = user.user_id;
+        res.status(201).json(createResponseFromUser(user));
+      } else {
+        const user = await UserModel.findOne({
+          where: { user_email: email, user_email_verified: true },
+        });
+
+        //if email exist
+        if (user) {
+          user.user_google_id = parseInt(google_id);
+          await user.save();
+          req.session.user_id = user.user_id;
+          res.status(201).json(createResponseFromUser(user));
+        } else {
+          //create user
+          const checkUserName = await UserModel.findOne({
+            where: { user_name: user_name },
+          });
+
+          const passwordHashed = await bcrypt.hash(google_id, 10);
+          //böyle bir username yok ise
+          if (!checkUserName) {
+            const newUser = await UserModel.create({
+              user_name: user_name,
+              user_password: passwordHashed,
+              user_email: email,
+              user_email_verified: true,
+              user_google_id: parseInt(google_id),
+            });
+
+            req.session.user_id = newUser.user_id;
+            res.status(201).json(createResponseFromUser(newUser));
+          } else {
+            //create new user name after create new user
+
+            const newUser = await UserModel.create({
+              user_name: await generateUniqueUsername(user_name),
+              user_password: passwordHashed,
+              user_email: email,
+              user_email_verified: true,
+              user_google_id: parseInt(google_id),
+            });
+
+            req.session.user_id = newUser.user_id;
+            res.status(201).json(createResponseFromUser(newUser));
+          }
+        }
       }
-
-      const passwordMatch = await bcrypt.compare(password, user.user_password);
-
-      if (!passwordMatch) {
-        throw createHttpError(401, "Invalid credentials");
-      }
-
-      req.session.user_id = user.user_id;
-      res.status(201).json(createResponseFromUser(user));
     } else {
-      //if user try login with user name
-      const user = await UserModel.findOne({ where: { user_name: user_name } });
-      if (!user) {
-        throw createHttpError(401, "Invalid credentials");
+      // if user try login with email
+
+      const emailRegex =
+        /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+      if (emailRegex.test(user_name)) {
+        const user = await UserModel.findOne({
+          where: { user_email: user_name, user_email_verified: true },
+        });
+        if (!user) {
+          throw createHttpError(401, "Invalid credentials");
+        }
+
+        const passwordMatch = await bcrypt.compare(
+          password,
+          user.user_password
+        );
+
+        if (!passwordMatch) {
+          throw createHttpError(401, "Invalid credentials");
+        }
+
+        req.session.user_id = user.user_id;
+        res.status(201).json(createResponseFromUser(user));
+      } else {
+        //if user try login with user name
+        const user = await UserModel.findOne({
+          where: { user_name: user_name },
+        });
+        if (!user) {
+          throw createHttpError(401, "Invalid credentials");
+        }
+
+        const passwordMatch = await bcrypt.compare(
+          password,
+          user.user_password
+        );
+
+        if (!passwordMatch) {
+          throw createHttpError(401, "Invalid credentials");
+        }
+
+        req.session.user_id = user.user_id;
+        res.status(201).json(createResponseFromUser(user));
       }
-
-      const passwordMatch = await bcrypt.compare(password, user.user_password);
-
-      if (!passwordMatch) {
-        throw createHttpError(401, "Invalid credentials");
-      }
-
-      req.session.user_id = user.user_id;
-      res.status(201).json(createResponseFromUser(user));
     }
+
   } catch (error) {
     next(error);
   }
@@ -302,17 +255,43 @@ export const emailVerified: RequestHandler<
     const decoded = jwt.verify(incomingToken, env.JWT_SECRET_RSA);
 
     if (decoded && typeof decoded !== "string") {
-      const user = await UserModel.findByPk(decoded.id);
+      console.log("gelen token burda", decoded);
+      //  const user = await UserModel.findByPk(decoded.id);
 
-      if (!user) {
-        throw createHttpError(401, "Invalid credentials");
+      // Check same username
+      const existingUsername = await UserModel.findOne({
+        where: { user_name: decoded.user_name },
+      });
+
+      if (existingUsername) {
+        throw createHttpError(
+          409,
+          "Username already taken. Please choose a different one or log in instead."
+        );
       }
 
-      user.user_email = decoded.email;
-      user.user_email_verified = true;
-      await user.save();
+      // Check same email
+      const existingEmail = await UserModel.findOne({
+        where: { user_email: decoded.email },
+      });
 
-      res.status(201).json({ message: "Email successfully verified." });
+      if (existingEmail) {
+        throw createHttpError(
+          409,
+          "Username already taken. Please choose a different one or log in instead."
+        );
+      }
+
+      const passwordHashed = await bcrypt.hash(decoded.password, 10);
+
+      await UserModel.create({
+        user_name: decoded.user_name,
+        user_email: decoded.email,
+        user_email_verified: true,
+        user_password: passwordHashed,
+      });
+
+      res.status(201).json({ message: "User successfully created!" });
     }
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
@@ -444,10 +423,7 @@ interface userResponseParam {
   user_email_verified?: boolean;
   user_google_id?: number;
 }
-function createResponseFromUser(
-  user: userResponseParam,
-  mailData?: object | null
-) {
+function createResponseFromUser(user: userResponseParam) {
   return {
     user_id: user.user_id,
     user_name: user.user_name,
@@ -455,7 +431,6 @@ function createResponseFromUser(
     user_authority_id: user.user_authority_id,
     user_email_verified: user.user_email_verified,
     user_google_id: user.user_google_id,
-    mailSend: mailData ? true : false,
   };
 }
 
