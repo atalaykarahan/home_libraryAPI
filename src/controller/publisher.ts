@@ -27,7 +27,7 @@ export const insertPublisher: RequestHandler = async (req, res, next) => {
     }
 
     await PublisherModel.create({
-      publisher_name: incomingPublisher.toUpperCase(),
+      publisher_name: turkceBuyukHarfeDonustur(incomingPublisher),
     });
 
     res.sendStatus(201);
@@ -35,3 +35,21 @@ export const insertPublisher: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+
+
+
+
+
+
+
+
+function turkceBuyukHarfeDonustur(metin: string): string {
+    const harfDuzeltici: { [key: string]: string } = {
+        'i': 'İ',
+        'ı': 'I',
+      };
+  
+    return metin.replace(/([iı])/g, function (match) {
+      return harfDuzeltici[match];
+    }).toUpperCase();
+  }
