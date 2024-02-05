@@ -5,12 +5,14 @@ const router = express.Router();
 
 router.get("/", AuthorController.getAuthors);
 
-router.post("/",AuthorController.createAuthor);
+router.get("/insert/:author",AuthorController.insertAuthor);
 
-router.get("/:author_id", AuthorController.getAuthor);
+// router.post("/",AuthorController.createAuthor);
 
-router.patch("/:author_id", AuthorController.updateAuthor);
+// router.get("/:author_id", AuthorController.getAuthor);
 
-router.delete("/:author_id", AuthorController.deleteAuthor);
+// router.patch("/:author_id", AuthorController.updateAuthor);
+
+// router.delete("/:author_id", AuthorController.deleteAuthor);
 
 export default router;
