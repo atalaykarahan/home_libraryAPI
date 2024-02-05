@@ -5,7 +5,9 @@ const router = express.Router();
 
 //all categories and book count
 router.get(
-    "/getCategoriesAndBooksCount",
-    CategoryController.getCategoriesAndBooksCount
-  );
+  "/getCategoriesAndBooksCount",
+  CategoryController.getCategoriesAndBooksCount
+);
+
+router.get("/insert/:category", CategoryController.insertCategory);
 export default router;

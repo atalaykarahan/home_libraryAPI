@@ -1,7 +1,54 @@
 import { RequestHandler } from "express";
 import CategoryModel from "../models/category";
 import BookCategory from "../models/book_category";
+import LogModel from "../models/log";
 import { Sequelize } from "sequelize";
+import db from "../../db";
+import createHttpError from "http-errors";
+
+export const insertCategory: RequestHandler = async (req, res, next) => {
+  const incomingCategory = req.params.category;
+  const t = await db.transaction();
+
+  try {
+    if (!incomingCategory) throw createHttpError(400, "Missing parameters");
+
+    // Büyük harf yapma işlemi
+    const formattedCategory = incomingCategory
+      .toLowerCase()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+    //check same category is exists
+    const category = await CategoryModel.findOne({
+      where: { category_name: formattedCategory },
+    });
+
+    if (category) throw createHttpError(401, "This category already exists.");
+
+    const createdCategory = await CategoryModel.create(
+      {
+        category_name: formattedCategory,
+      },
+      { transaction: t }
+    );
+
+    await LogModel.create(
+      {
+        user_id: req.session.user_id,
+        event_date: new Date(),
+        category_id: createdCategory.category_id,
+        event_type_id: 8,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+
+    res.sendStatus(201);
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getCategoriesAndBooksCount: RequestHandler = async (
   req,
