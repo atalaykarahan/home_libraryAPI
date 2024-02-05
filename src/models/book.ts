@@ -67,7 +67,6 @@ const Book = db.define<BookInstance>(
   }
 );
 
-Book.belongsTo(PublisherModel, { foreignKey: "publisher_id" });
 PublisherModel.hasMany(Book, { foreignKey: "publisher_id" });
 
 export default Book;

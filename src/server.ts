@@ -4,6 +4,7 @@ import env from "./util/validateEnv";
 import booksRoutes from "./routes/books";
 import userRoutes from "./routes/user";
 import authorRoutes from "./routes/author";
+import categoryRoutes from "./routes/category";
 import publisherRoutes from "./routes/publisher";
 import morgan from "morgan";
 import createHttpError, { isHttpError } from "http-errors";
@@ -74,8 +75,11 @@ app.use("/api/users", userRoutes);
 // Author routes api/authors
 app.use("/api/authors", authorRoutes);
 
-// Publisher routes api/publisher
+// Publisher routes api/publishers
 app.use("/api/publishers", publisherRoutes);
+
+// Category routes api/categories
+app.use("/api/categories", categoryRoutes);
 
 app.use((req, res, next) => {
   next(createHttpError(404, "Endpoint not found"));
