@@ -124,6 +124,7 @@ export const login: RequestHandler<
       if (user) {
         console.log("normalde sadece buraya düşmeli yani bu google id değerine sahip bir user var ve o user'ı dönmeli")
         req.session.user_id = user.user_id;
+        req.session.user_authority_id = user.user_authority_id;
         res.status(201).json(createResponseFromUser(user));
       } else {
         const user = await UserModel.findOne({
@@ -136,6 +137,7 @@ export const login: RequestHandler<
           user.user_google_id = parseInt(google_id);
           await user.save();
           req.session.user_id = user.user_id;
+          req.session.user_authority_id = user.user_authority_id;
           res.status(201).json(createResponseFromUser(user));
         } else {
           //create user
@@ -196,6 +198,7 @@ export const login: RequestHandler<
         }
 
         req.session.user_id = user.user_id;
+        req.session.user_authority_id = user.user_authority_id;
         res.status(201).json(createResponseFromUser(user));
       } else {
         //if user try login with user name
@@ -216,6 +219,7 @@ export const login: RequestHandler<
         }
 
         req.session.user_id = user.user_id;
+        req.session.user_authority_id = user.user_authority_id;
         res.status(201).json(createResponseFromUser(user));
       }
     }

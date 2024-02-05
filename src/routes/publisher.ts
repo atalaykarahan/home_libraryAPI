@@ -1,11 +1,12 @@
 import express from "express";
 import * as PublisherController from "../controller/publisher";
+import { requiresNotGuest } from "../middleware/auth";
 
 const router = express.Router();
 
 router.get("/", PublisherController.getAllPublisher);
 
-router.get("/insert/:publisher", PublisherController.insertPublisher);
+router.get("/insert/:publisher",requiresNotGuest, PublisherController.insertPublisher);
 
 router.get(
   "/getPublishersAndBooksCount",

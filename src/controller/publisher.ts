@@ -1,8 +1,10 @@
 import { RequestHandler } from "express";
 import PublisherModel from "../models/publisher";
+import LogModel from "../models/log";
 import BookModel from "../models/book";
 import createHttpError from "http-errors";
 import { Sequelize } from "sequelize";
+import db from "../../db";
 
 export const getAllPublisher: RequestHandler = async (req, res, next) => {
   try {
@@ -16,6 +18,8 @@ export const getAllPublisher: RequestHandler = async (req, res, next) => {
 
 export const insertPublisher: RequestHandler = async (req, res, next) => {
   const incomingPublisher = req.params.publisher;
+  const t = await db.transaction();
+
   try {
     if (!incomingPublisher) throw createHttpError(400, "Missing parameters");
 
@@ -28,9 +32,24 @@ export const insertPublisher: RequestHandler = async (req, res, next) => {
       throw createHttpError(401, "This publisher already exists.");
     }
 
-    await PublisherModel.create({
-      publisher_name: turkceBuyukHarfeDonustur(incomingPublisher),
-    });
+    const createdPublisher = await PublisherModel.create(
+      {
+        publisher_name: turkceBuyukHarfeDonustur(incomingPublisher),
+      },
+      { transaction: t }
+    );
+
+    await LogModel.create(
+      {
+        user_id: req.session.user_id,
+        event_date: new Date(),
+        publisher_id: createdPublisher.publisher_id,
+        event_type_id: 19,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
 
     res.sendStatus(201);
   } catch (error) {
