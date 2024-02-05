@@ -7,6 +7,11 @@ router.get("/", PublisherController.getAllPublisher);
 
 router.get("/insert/:publisher", PublisherController.insertPublisher);
 
+router.get(
+  "/getPublishersAndBooksCount",
+  PublisherController.getPublishersAndBooksCount
+);
+
 // router.post("/",AuthorController.createAuthor);
 
 // router.get("/:author_id", AuthorController.getAuthor);

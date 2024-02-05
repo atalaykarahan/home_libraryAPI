@@ -1,6 +1,8 @@
 import { RequestHandler } from "express";
 import PublisherModel from "../models/publisher";
+import BookModel from "../models/book";
 import createHttpError from "http-errors";
+import { Sequelize } from "sequelize";
 
 export const getAllPublisher: RequestHandler = async (req, res, next) => {
   try {
@@ -36,20 +38,42 @@ export const insertPublisher: RequestHandler = async (req, res, next) => {
   }
 };
 
+export const getPublishersAndBooksCount: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const result = await PublisherModel.findAll({
+      attributes: [
+        "publisher_name",
+        [Sequelize.fn("COUNT", Sequelize.col("book_id")), "bookCount"],
+      ],
+      include: [
+        {
+          model: BookModel,
+          attributes: [],
+          required: false,
+        },
+      ],
+      group: ["PUBLISHER.publisher_id"],
+    });
 
-
-
-
-
-
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
 
 function turkceBuyukHarfeDonustur(metin: string): string {
-    const harfDuzeltici: { [key: string]: string } = {
-        'i': 'İ',
-        'ı': 'I',
-      };
-  
-    return metin.replace(/([iı])/g, function (match) {
+  const harfDuzeltici: { [key: string]: string } = {
+    i: "İ",
+    ı: "I",
+  };
+
+  return metin
+    .replace(/([iı])/g, function (match) {
       return harfDuzeltici[match];
-    }).toUpperCase();
-  }
+    })
+    .toUpperCase();
+}

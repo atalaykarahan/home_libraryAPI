@@ -17,7 +17,7 @@ interface PublisherInstance
 }
 
 const Publisher = db.define<PublisherInstance>(
-  "publisher",
+  "PUBLISHER",
   {
     publisher_id: {
       type: DataTypes.BIGINT,
@@ -35,5 +35,6 @@ const Publisher = db.define<PublisherInstance>(
     timestamps: false,
   }
 );
+
 
 export default Publisher;
