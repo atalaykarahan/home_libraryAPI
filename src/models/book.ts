@@ -7,6 +7,7 @@ import {
 } from "sequelize";
 import db from "../../db";
 import PublisherModel from "./publisher";
+import AuthorModel from "./author";
 
 interface BookInstance
   extends Model<
@@ -68,5 +69,6 @@ const Book = db.define<BookInstance>(
 );
 
 PublisherModel.hasMany(Book, { foreignKey: "publisher_id" });
+AuthorModel.hasMany(Book, { foreignKey: "author_id" });
 
 export default Book;

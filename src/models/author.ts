@@ -18,7 +18,7 @@ interface AuthorInstance
 }
 
 const Author = db.define<AuthorInstance>(
-  "user",
+  "AUTHOR",
   {
     author_id: {
       type: DataTypes.BIGINT,

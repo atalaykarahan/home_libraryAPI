@@ -1,8 +1,10 @@
 import { RequestHandler } from "express";
 import AuthorModel from "../models/author";
 import LogModel from "../models/log";
+import BookModel from "../models/book";
 import createHttpError from "http-errors";
 import db from "../../db";
+import { Sequelize } from "sequelize";
 
 
 // INSERT
@@ -81,7 +83,37 @@ export const insertAuthor: RequestHandler<
       await t.commit();
     }
 
-    res.status(201);
+    res.sendStatus(201);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+export const getAuthorsAndBooksCount: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const result = await AuthorModel.findAll({
+      attributes: [
+        "author_name",
+        "author_surname",
+        [Sequelize.fn("COUNT", Sequelize.col("book_id")), "bookCount"],
+      ],
+      include: [
+        {
+          model: BookModel,
+          attributes: [],
+          required: false,
+        },
+      ],
+      group: ["AUTHOR.author_id"],
+    });
+
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }

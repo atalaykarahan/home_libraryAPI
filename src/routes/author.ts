@@ -3,16 +3,11 @@ import * as AuthorController from "../controller/author";
 
 const router = express.Router();
 
-router.get("/", AuthorController.getAuthors);
+router.post("/insert/", AuthorController.insertAuthor);
 
-router.get("/insert/:author",AuthorController.insertAuthor);
-
-// router.post("/",AuthorController.createAuthor);
-
-// router.get("/:author_id", AuthorController.getAuthor);
-
-// router.patch("/:author_id", AuthorController.updateAuthor);
-
-// router.delete("/:author_id", AuthorController.deleteAuthor);
+router.get(
+  "/getAuthorsAndBooksCount",
+  AuthorController.getAuthorsAndBooksCount
+);
 
 export default router;
