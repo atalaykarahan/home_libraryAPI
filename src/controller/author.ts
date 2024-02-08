@@ -119,3 +119,16 @@ export const getAuthorsAndBooksCount: RequestHandler = async (
   }
 };
 
+export const getAllAuthors: RequestHandler = async (req, res, next) => {
+  try {
+    const result = await AuthorModel.findAll();
+    if(result){
+      res.status(200).json(result);
+    }else {
+      throw createHttpError(404, "No authors found");
+    }
+  } catch (error) {
+    next(error);
+  }
+}
+

@@ -6,6 +6,7 @@ import userRoutes from "./routes/user";
 import authorRoutes from "./routes/author";
 import categoryRoutes from "./routes/category";
 import publisherRoutes from "./routes/publisher";
+import statusRoutes from "./routes/status";
 import morgan from "morgan";
 import createHttpError, { isHttpError } from "http-errors";
 // Database
@@ -80,6 +81,9 @@ app.use("/api/publishers", publisherRoutes);
 
 // Category routes api/categories
 app.use("/api/categories", categoryRoutes);
+
+// Status routes api/statuses
+app.use("/api/statuses", statusRoutes);
 
 app.use((req, res, next) => {
   next(createHttpError(404, "Endpoint not found"));

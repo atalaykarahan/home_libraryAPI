@@ -10,4 +10,7 @@ router.get(
 );
 
 router.get("/insert/:category", CategoryController.insertCategory);
+
+router.get("/", CategoryController.getAllCategories);
 export default router;
+

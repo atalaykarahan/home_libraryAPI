@@ -10,4 +10,6 @@ router.get(
   AuthorController.getAuthorsAndBooksCount
 );
 
+router.get("/",AuthorController.getAllAuthors);
+
 export default router;

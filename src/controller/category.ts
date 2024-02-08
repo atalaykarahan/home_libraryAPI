@@ -77,3 +77,12 @@ export const getCategoriesAndBooksCount: RequestHandler = async (
     next(error);
   }
 };
+
+export const getAllCategories:  RequestHandler = async (req, res, next) => {
+  try {
+    const result = await CategoryModel.findAll();
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
