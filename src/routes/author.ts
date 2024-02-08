@@ -12,4 +12,6 @@ router.get(
 
 router.get("/",AuthorController.getAllAuthors);
 
+router.get("/select",AuthorController.getAllAuthorsSelect)
+
 export default router;

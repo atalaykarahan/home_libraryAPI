@@ -6,7 +6,6 @@ import createHttpError from "http-errors";
 import db from "../../db";
 import { Sequelize } from "sequelize";
 
-
 // INSERT
 interface CreateAuthorBody {
   author_name?: string;
@@ -89,8 +88,6 @@ export const insertAuthor: RequestHandler<
   }
 };
 
-
-
 export const getAuthorsAndBooksCount: RequestHandler = async (
   req,
   res,
@@ -122,13 +119,31 @@ export const getAuthorsAndBooksCount: RequestHandler = async (
 export const getAllAuthors: RequestHandler = async (req, res, next) => {
   try {
     const result = await AuthorModel.findAll();
-    if(result){
+    if (result) {
       res.status(200).json(result);
-    }else {
+    } else {
       throw createHttpError(404, "No authors found");
     }
   } catch (error) {
     next(error);
   }
-}
+};
 
+export const getAllAuthorsSelect: RequestHandler = async (req, res, next) => {
+  try {
+    const result = await AuthorModel.findAll();
+    if (result) {
+      const formattedAuthors = result.map((author) => ({
+        label: author.author_surname
+          ? `${author.author_name} ${author.author_surname}`
+          : author.author_name,
+        value: author.author_id,
+      }));
+      res.status(200).json(formattedAuthors);
+    } else {
+      throw createHttpError(404, "No authors found");
+    }
+  } catch (error) {
+    next(error);
+  }
+};
