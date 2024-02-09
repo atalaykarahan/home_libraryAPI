@@ -8,6 +8,7 @@ import {
 import db from "../../db";
 import PublisherModel from "./publisher";
 import AuthorModel from "./author";
+import StatusModel from "./status";
 
 interface BookInstance
   extends Model<
@@ -69,6 +70,10 @@ const Book = db.define<BookInstance>(
 );
 
 PublisherModel.hasMany(Book, { foreignKey: "publisher_id" });
+Book.hasOne(PublisherModel, {foreignKey: "publisher_id"});
 AuthorModel.hasMany(Book, { foreignKey: "author_id" });
+Book.hasOne(AuthorModel, {foreignKey: "author_id"});
+StatusModel.hasMany(Book, { foreignKey: "status_id" });
+Book.hasOne(StatusModel, {foreignKey: "status_id"});
 
 export default Book;

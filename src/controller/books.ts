@@ -1,14 +1,27 @@
 import { RequestHandler } from "express";
 import BookModel from "../models/book";
+import AuthorModel from "../models/author";
+import PublisherModel from "../models/publisher";
+import StatusModel from "../models/status";
 import createHttpError from "http-errors";
 import db from "../../db";
 import BookCategoryModel from "../models/book_category";
 
 export const getBooks: RequestHandler = async (req, res, next) => {
   try {
-    BookModel.findAll().then((b) => {
-      res.status(200).json(b);
+    const books = await BookModel.findAll({
+      attributes: ["book_id", "book_title", "book_summary"],
+      include: [
+        { model: AuthorModel },
+        { model: PublisherModel },
+        { model: StatusModel },
+      ],
     });
+    res.status(200).json(books);
+
+    // BookModel.findAll().then((b) => {
+    //   res.status(200).json(b);
+    // });
   } catch (error) {
     next(error);
   }
