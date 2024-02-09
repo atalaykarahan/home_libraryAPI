@@ -17,11 +17,11 @@ interface BookInstance
   book_id: CreationOptional<number>;
   book_title: string;
   author_id: number;
-  publisher_id: number;
+  publisher_id: CreationOptional<number>;
   status_id: number;
-  image_path: string;
+  image_path: CreationOptional<string>;
   book_summary: string;
-  book_isbn: number;
+  book_isbn: CreationOptional<number>;
 }
 
 const Book = db.define<BookInstance>(

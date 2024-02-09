@@ -22,10 +22,12 @@ const BookCategory = db.define<BookCategoryInstance>(
     book_id: {
       type: DataTypes.BIGINT,
       allowNull: false,
+      primaryKey: true,
     },
     category_id: {
       type: DataTypes.BIGINT,
       allowNull: false,
+      primaryKey: true,
     },
   },
   {
@@ -34,6 +36,6 @@ const BookCategory = db.define<BookCategoryInstance>(
   }
 );
 
-CategoryModel.hasMany(BookCategory, {foreignKey: "category_id"})
+CategoryModel.hasMany(BookCategory, { foreignKey: "category_id" });
 
 export default BookCategory;
