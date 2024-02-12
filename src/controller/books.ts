@@ -19,9 +19,6 @@ export const getBooks: RequestHandler = async (req, res, next) => {
     });
     res.status(200).json(books);
 
-    // BookModel.findAll().then((b) => {
-    //   res.status(200).json(b);
-    // });
   } catch (error) {
     next(error);
   }
