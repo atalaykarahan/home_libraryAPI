@@ -12,11 +12,12 @@ export const getBooks: RequestHandler = async (req, res, next) => {
     const books = await BookModel.findAll({
       attributes: ["book_id", "book_title", "book_summary"],
       include: [
-        { model: AuthorModel },
+        { model: AuthorModel  },
         { model: PublisherModel },
         { model: StatusModel },
       ],
     });
+    // console.log(books);
     res.status(200).json(books);
 
   } catch (error) {
