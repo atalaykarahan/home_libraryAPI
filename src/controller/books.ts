@@ -136,7 +136,7 @@ export const insertBook: RequestHandler<
         );
 
         break;
-      //in the library
+      //in the library &
       case 2:
       case 6:
         //create book
@@ -176,67 +176,8 @@ export const insertBook: RequestHandler<
         break;
       //readed
       case 3:
-        //create book
-        createdBook = await BookModel.create(
-          {
-            book_title: formatBookTitle(book_title),
-            author_id: author_id,
-            status_id: 2,
-            publisher_id: publisher_id,
-            book_summary: book_summary,
-          },
-          { transaction: t }
-        );
-
-        //after creating book, create book and categories relationship
-        for (const category_id of categories_id) {
-          await BookCategoryModel.create(
-            {
-              book_id: createdBook.book_id,
-              category_id: category_id,
-            },
-            { transaction: t }
-          );
-        }
-
-        //create reading part
-        createdReading = await ReadingModel.create(
-          {
-            user_id: req.session.user_id,
-            book_id: createdBook.book_id,
-            status_id: status_id,
-          },
-          {
-            transaction: t,
-          }
-        );
-
-        //create book log type must be 25
-        await LogModel.create(
-          {
-            user_id: req.session.user_id,
-            event_date: new Date(),
-            book_id: createdBook.book_id,
-            event_type_id: 25,
-          },
-          { transaction: t }
-        );
-
-        //create reading log
-        await LogModel.create(
-          {
-            user_id: req.session.user_id,
-            event_date: new Date(),
-            book_id: createdBook.book_id,
-            reading_id: createdReading.reading_id,
-            event_type_id: 28,
-          },
-          { transaction: t }
-        );
-        break;
-      //left unfinished
       case 4:
-        //create book
+        //create book & left unfinished
         createdBook = await BookModel.create(
           {
             book_title: formatBookTitle(book_title),
