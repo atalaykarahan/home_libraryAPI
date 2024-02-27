@@ -3,7 +3,7 @@ import * as AuthorController from "../controller/author";
 
 const router = express.Router();
 
-router.post("/insert/", AuthorController.insertAuthor);
+router.post("/insert", AuthorController.insertAuthor);
 
 router.get(
   "/getAuthorsAndBooksCount",

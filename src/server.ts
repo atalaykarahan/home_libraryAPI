@@ -7,6 +7,7 @@ import authorRoutes from "./routes/author";
 import categoryRoutes from "./routes/category";
 import publisherRoutes from "./routes/publisher";
 import statusRoutes from "./routes/status";
+import readingRoutes from "./routes/reading";
 import morgan from "morgan";
 import createHttpError, { isHttpError } from "http-errors";
 // Database
@@ -28,7 +29,7 @@ const port = env.PORT;
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3001",
     credentials: true,
   })
 );
@@ -85,9 +86,13 @@ app.use("/api/categories", categoryRoutes);
 // Status routes api/statuses
 app.use("/api/statuses", statusRoutes);
 
+// Reading routes api/readings
+app.use("/api/readings", readingRoutes);
+
 app.use((req, res, next) => {
   next(createHttpError(404, "Endpoint not found"));
 });
+
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
