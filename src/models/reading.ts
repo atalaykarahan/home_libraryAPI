@@ -20,6 +20,7 @@ import {
     book_id: number;
     status_id:number;
     comment?:string;
+    deletedAt?:Date;
   }
   
   const Reading = db.define<ReadingInstance>(
@@ -46,10 +47,15 @@ import {
         type: DataTypes.TEXT,
         allowNull: true,
       },
+      deletedAt: {
+        type: DataTypes.TIME,
+        allowNull: true,
+      },
+
     },
     {
       tableName: "READING",
-      timestamps: false,
+      paranoid:true,
     }
   );
 

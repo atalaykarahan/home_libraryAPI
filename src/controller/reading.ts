@@ -27,17 +27,24 @@ export const getMyReading: RequestHandler = async (req, res, next) => {
     }
 
     res.status(200).json(myReadings);
+  } catch (error) {
+    next(error);
+  }
+};
 
-    //   const books = await BookModel.findAll({
-    //     attributes: ["book_id", "book_title", "book_summary"],
-    //     include: [
-    //       { model: AuthorModel },
-    //       { model: PublisherModel },
-    //       { model: StatusModel },
-    //     ],
-    //   });
+export const removeMyReading: RequestHandler = async (req, res, next) => {
+  try {
+    const user_id = req.session.user_id;
+    const reading_id = req.params.reading_id;
 
-    //   res.status(200).json(books);
+    if (!reading_id) {
+      throw createHttpError(400, "Missing parameters");
+    }
+
+    await ReadingModel.destroy({
+      where: { reading_id: reading_id, user_id: user_id },
+    });
+    res.sendStatus(200);
   } catch (error) {
     next(error);
   }

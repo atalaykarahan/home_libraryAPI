@@ -51,7 +51,7 @@ export const insertBook: RequestHandler<
   const t = await db.transaction();
   try {
     //if user send a missing parameters
-    if (
+      if (
       !book_title ||
       !author_id ||
       !status_id ||
