@@ -6,6 +6,8 @@ const router = express.Router();
 
 router.get("/", requiresAuth, ReadingController.getMyReading);
 
+router.get("/addMyReading/:book_id/:status_id", requiresAuth, ReadingController.addMyReading);
+
 router.delete("/:reading_id", requiresAuth, ReadingController.removeMyReading);
 
 

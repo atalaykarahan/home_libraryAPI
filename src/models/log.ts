@@ -15,7 +15,7 @@ interface LogInstance
   log_id: CreationOptional<number>;
   user_id?: number;
   event_type_id: number;
-  event_date: Date;
+  event_date?: CreationOptional<Date>;
   book_id?: number;
   description?: Text;
   category_id?: number;
@@ -44,7 +44,7 @@ const Book = db.define<LogInstance>(
     },
     event_date: {
       type: DataTypes.TIME,
-      allowNull: false,
+      allowNull: true,
     },
     book_id: {
       type: DataTypes.BIGINT,
@@ -78,7 +78,7 @@ const Book = db.define<LogInstance>(
   {
     tableName: "LOG",
     timestamps: false,
-  }
+  },
 );
 
 export default Book;

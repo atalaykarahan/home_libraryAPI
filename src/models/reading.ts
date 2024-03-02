@@ -21,6 +21,8 @@ import {
     status_id:number;
     comment?:string;
     deletedAt?:Date;
+    createdAt?:Date;
+    updatedAt?:Date;
   }
   
   const Reading = db.define<ReadingInstance>(
@@ -51,6 +53,14 @@ import {
         type: DataTypes.TIME,
         allowNull: true,
       },
+      createdAt:{
+        type:DataTypes.TIME,
+        allowNull:true,
+      },
+      updatedAt:{
+        type:DataTypes.TIME,
+        allowNull:true,
+      }
 
     },
     {
