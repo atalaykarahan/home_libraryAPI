@@ -6,6 +6,7 @@ import { Sequelize } from "sequelize";
 import db from "../../db";
 import createHttpError from "http-errors";
 import { EventTypeEnum } from "../util/enums";
+import { formatBookTitle } from "../custom-functions";
 
 export const insertCategory: RequestHandler = async (req, res, next) => {
   const incomingCategory = req.params.category;
@@ -14,10 +15,12 @@ export const insertCategory: RequestHandler = async (req, res, next) => {
   try {
     if (!incomingCategory) throw createHttpError(400, "Missing parameters");
 
+    const formattedCategory = formatBookTitle(incomingCategory);
+
     // Büyük harf yapma işlemi
-    const formattedCategory = incomingCategory
-      .toLowerCase()
-      .replace(/\b\w/g, (char) => char.toUpperCase());
+    // const formattedCategory = incomingCategory
+    //   .toLowerCase()
+    //   .replace(/\b\w/g, (char) => char.toUpperCase());
 
     //check same category is exists
     const category = await CategoryModel.findOne({
