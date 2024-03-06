@@ -12,7 +12,7 @@ interface EventInstance
     InferAttributes<EventInstance>,
     InferCreationAttributes<EventInstance>
   > {
-  event_id: CreationOptional<number>;
+  event_id: CreationOptional<string>;
   event_name: string;
 }
 

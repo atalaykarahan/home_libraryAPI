@@ -5,6 +5,7 @@ import BookModel from "../models/book";
 import createHttpError from "http-errors";
 import db from "../../db";
 import { Sequelize } from "sequelize";
+import { EventTypeEnum } from "../util/enums";
 
 // INSERT
 interface CreateAuthorBody {
@@ -55,7 +56,7 @@ export const insertAuthor: RequestHandler<
           user_id: req.session.user_id,
           event_date: new Date(),
           author_id: createdAuthor.author_id,
-          event_type_id: 22,
+          event_type_id: EventTypeEnum.author_create,
         },
         { transaction: t }
       );
@@ -74,7 +75,7 @@ export const insertAuthor: RequestHandler<
           user_id: req.session.user_id,
           event_date: new Date(),
           author_id: createdAuthor.author_id,
-          event_type_id: 22,
+          event_type_id: EventTypeEnum.author_create,
         },
         { transaction: t }
       );

@@ -12,7 +12,7 @@ interface CategoryInstance
     InferAttributes<CategoryInstance>,
     InferCreationAttributes<CategoryInstance>
   > {
-  category_id: CreationOptional<number>;
+  category_id: CreationOptional<string>;
   category_name: string;
 }
 

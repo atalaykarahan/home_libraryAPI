@@ -12,7 +12,7 @@ interface PublisherInstance
     InferAttributes<PublisherInstance>,
     InferCreationAttributes<PublisherInstance>
   > {
-  publisher_id: CreationOptional<number>;
+  publisher_id: CreationOptional<string>;
   publisher_name: string;
 }
 

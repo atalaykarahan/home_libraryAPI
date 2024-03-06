@@ -5,6 +5,7 @@ import BookModel from "../models/book";
 import createHttpError from "http-errors";
 import { Sequelize } from "sequelize";
 import db from "../../db";
+import { EventTypeEnum } from "../util/enums";
 
 export const getAllPublisher: RequestHandler = async (req, res, next) => {
   try {
@@ -44,7 +45,7 @@ export const insertPublisher: RequestHandler = async (req, res, next) => {
         user_id: req.session.user_id,
         event_date: new Date(),
         publisher_id: createdPublisher.publisher_id,
-        event_type_id: 19,
+        event_type_id: EventTypeEnum.publisher_create,
       },
       { transaction: t }
     );

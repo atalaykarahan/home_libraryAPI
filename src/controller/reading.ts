@@ -41,23 +41,52 @@ export const getMyReadings: RequestHandler = async (req, res, next) => {
 export const removeMyReading: RequestHandler = async (req, res, next) => {
   const user_id = req.session.user_id;
   const reading_id = req.params.reading_id;
+  const t = await db.transaction();
   try {
-    if (!reading_id) {
-      throw createHttpError(400, "Missing parameters");
+    if (!reading_id) throw createHttpError(400, "Missing parameters");
+
+    const reading = await ReadingModel.findByPk(reading_id);
+
+    if (!reading) throw createHttpError(404, "Reading exists");
+
+    console.log(reading);
+
+    if (StatusEnum.okunuyor == reading.status_id) {
+      const readingBook = await BookModel.findByPk(reading.book_id);
+
+      if (!readingBook) throw createHttpError(404, "Book not found");
+      readingBook.status_id = StatusEnum.kitaplikta;
+      readingBook.save({ transaction: t });
+
+      LogModel.create(
+        {
+          user_id: user_id,
+          event_type_id: EventTypeEnum.book_update,
+          book_id: readingBook.book_id,
+        },
+        { transaction: t }
+      );
     }
 
     await ReadingModel.destroy({
       where: { reading_id: reading_id, user_id: user_id },
+      transaction: t,
     });
 
-    await LogModel.create({
-      user_id: user_id,
-      event_type_id: 29,
-      reading_id: parseInt(reading_id),
-    });
+    await LogModel.create(
+      {
+        user_id: user_id,
+        event_type_id: EventTypeEnum.reading_delete,
+        reading_id: reading_id,
+      },
+      { transaction: t }
+    );
+
+    t.commit();
 
     res.sendStatus(200);
   } catch (error) {
+    t.rollback();
     next(error);
   }
 };
@@ -66,8 +95,8 @@ export const removeMyReading: RequestHandler = async (req, res, next) => {
 //#region ADD NEW BOOK TO READING
 export const addMyReading: RequestHandler = async (req, res, next) => {
   const t = await db.transaction();
-  const book_id = parseInt(req.params.book_id);
-  const status_id = parseInt(req.params.status_id);
+  const book_id = req.params.book_id;
+  const status_id = req.params.status_id;
   const user_id = req.session.user_id;
   try {
     if (!book_id || !status_id || !user_id)
@@ -81,8 +110,11 @@ export const addMyReading: RequestHandler = async (req, res, next) => {
       },
     });
 
-    if (isExist) throw createHttpError(400, "You already add this book");
+    console.log("is exists kısmına geldi ********************  ", isExist);
 
+    if (isExist) {
+      throw createHttpError(400, "You already add this book");
+    }
     //check if status is correct
     if (
       ![
@@ -107,11 +139,11 @@ export const addMyReading: RequestHandler = async (req, res, next) => {
         `${StatusEnum.kitaplikta}`,
       ].includes(book.status_id.toString())
     ) {
-      book.status_id = StatusEnum.kullaniliyor;
+      book.status_id = StatusEnum.okunuyor.toString();
       await book.save();
     } else if (
       status_id == StatusEnum.okunuyor &&
-      book.status_id == StatusEnum.kullaniliyor
+      book.status_id == StatusEnum.okunuyor
     ) {
       throw createHttpError(500, "Someone already reading this book");
     }
@@ -146,8 +178,8 @@ export const addMyReading: RequestHandler = async (req, res, next) => {
 
 //#region UPDATE READING
 interface UpdateMyReadingBody {
-  reading_id?: number;
-  status_id?: number;
+  reading_id?: string;
+  status_id?: string;
   comment?: string;
 }
 export const updateMyReading: RequestHandler<
@@ -161,11 +193,10 @@ export const updateMyReading: RequestHandler<
   const reading_id = req.body.reading_id;
   const user_id = req.session.user_id;
   const t = await db.transaction();
+
   try {
     if (!reading_id || !user_id)
       throw createHttpError(400, "Missing parameter");
-
-    // if (!status_id && !comment) throw createHttpError(400, "Missing parameter");
 
     const reading = await ReadingModel.findByPk(reading_id);
 
@@ -174,25 +205,15 @@ export const updateMyReading: RequestHandler<
 
     if (!book) throw createHttpError(500, "Server error existing book");
 
-
-    if (comment){
+    if (comment) {
       reading.comment = comment;
-    }else {
+    } else {
       reading.comment = "";
     }
 
     if (status_id) {
-      // Okuma durumu varsa işlemleri gerçekleştir
-      console.log("status_id ->", status_id);
-      console.log("reading_status_id -->", reading.status_id);
-      console.log("book_status_id -->", book.status_id);
-      console.log(reading, book);
-      if (reading.status_id === 1) {
-        console.log("if yapısı doğru çalıştı", typeof reading.status_id);
-      }
-
-      switch (reading.status_id.toString()) {
-        case StatusEnum.okunuyor.toString():
+      switch (reading.status_id) {
+        case StatusEnum.okunuyor:
           // Okuma durumu 1 ise okunuyor ise
           if (
             [StatusEnum.okundu, StatusEnum.yarim_birakildi].includes(status_id)
@@ -211,11 +232,12 @@ export const updateMyReading: RequestHandler<
             );
           }
           break;
-        case StatusEnum.okundu.toString():
-        case StatusEnum.yarim_birakildi.toString():
+        case StatusEnum.okundu:
+        case StatusEnum.yarim_birakildi:
           // Okuma durumu 3 veya 4 ise yani okundu | yarım bırakıldı
           // İstenen durum 1 ise kitap okunuyor durumuna geçer
-          if (StatusEnum.okunuyor == 1) {
+          if (status_id == StatusEnum.okunuyor) {
+            console.log("düştü *****************************");
             book.status_id = StatusEnum.okunuyor;
             await book.save({ transaction: t });
             await LogModel.create(

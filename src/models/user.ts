@@ -1,6 +1,7 @@
 import {
   CreationOptional,
   DataTypes,
+  DecimalDataType,
   InferAttributes,
   InferCreationAttributes,
   Model,
@@ -12,13 +13,13 @@ interface UserInstance
     InferAttributes<UserInstance>,
     InferCreationAttributes<UserInstance>
   > {
-  user_id: CreationOptional<number>;
+  user_id: CreationOptional<string>;
   user_name: string;
   user_password: string;
   user_email: string;
-  user_authority_id?: number;
+  user_authority_id?: string;
   user_email_verified?: boolean;
-  user_google_id?: number;
+  user_google_id?: string;
 }
 
 const User = db.define<UserInstance>(
@@ -52,7 +53,7 @@ const User = db.define<UserInstance>(
       allowNull: true,
     },
     user_google_id: {
-      type: DataTypes.NUMBER,
+      type: DataTypes.DECIMAL,
       allowNull: true,
     },
   },

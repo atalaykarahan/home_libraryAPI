@@ -12,7 +12,7 @@ interface AuthorInstance
     InferAttributes<AuthorInstance>,
     InferCreationAttributes<AuthorInstance>
   > {
-  author_id: CreationOptional<number>;
+  author_id: CreationOptional<string>;
   author_name: string;
   author_surname?: string;
 }

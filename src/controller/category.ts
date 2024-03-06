@@ -5,6 +5,7 @@ import LogModel from "../models/log";
 import { Sequelize } from "sequelize";
 import db from "../../db";
 import createHttpError from "http-errors";
+import { EventTypeEnum } from "../util/enums";
 
 export const insertCategory: RequestHandler = async (req, res, next) => {
   const incomingCategory = req.params.category;
@@ -37,7 +38,7 @@ export const insertCategory: RequestHandler = async (req, res, next) => {
         user_id: req.session.user_id,
         event_date: new Date(),
         category_id: createdCategory.category_id,
-        event_type_id: 8,
+        event_type_id: EventTypeEnum.category_create,
       },
       { transaction: t }
     );

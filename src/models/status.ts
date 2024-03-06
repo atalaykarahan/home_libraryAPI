@@ -12,7 +12,7 @@ import {
       InferAttributes<StatusInstance>,
       InferCreationAttributes<StatusInstance>
     > {
-    status_id: CreationOptional<number>;
+    status_id: CreationOptional<string>;
     status_name: string;
   }
   

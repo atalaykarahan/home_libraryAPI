@@ -1,6 +1,7 @@
 import {
   CreationOptional,
   DataTypes,
+  DecimalDataType,
   InferAttributes,
   InferCreationAttributes,
   Model,
@@ -15,11 +16,11 @@ interface BookInstance
     InferAttributes<BookInstance>,
     InferCreationAttributes<BookInstance>
   > {
-  book_id: CreationOptional<number>;
+  book_id: CreationOptional<string>;
   book_title: string;
-  author_id: number;
-  publisher_id: CreationOptional<number>;
-  status_id: number;
+  author_id: string;
+  publisher_id: CreationOptional<string>;
+  status_id: string;
   image_path: CreationOptional<string>;
   book_summary: string;
   book_isbn: CreationOptional<number>;

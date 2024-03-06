@@ -12,17 +12,17 @@ interface LogInstance
     InferAttributes<LogInstance>,
     InferCreationAttributes<LogInstance>
   > {
-  log_id: CreationOptional<number>;
-  user_id?: number;
-  event_type_id: number;
+  log_id: CreationOptional<string>;
+  user_id?: string;
+  event_type_id: string;
   event_date?: CreationOptional<Date>;
-  book_id?: number;
+  book_id?: string;
   description?: Text;
-  category_id?: number;
-  translator_id?: number;
-  publisher_id?: number;
-  author_id?: number;
-  reading_id?: number;
+  category_id?: string;
+  translator_id?: string;
+  publisher_id?: string;
+  author_id?: string;
+  reading_id?: string;
 }
 
 const Book = db.define<LogInstance>(

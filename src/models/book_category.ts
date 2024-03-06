@@ -12,8 +12,8 @@ interface BookCategoryInstance
     InferAttributes<BookCategoryInstance>,
     InferCreationAttributes<BookCategoryInstance>
   > {
-  book_id: number;
-  category_id: number;
+  book_id: string;
+  category_id: string;
 }
 
 const BookCategory = db.define<BookCategoryInstance>(

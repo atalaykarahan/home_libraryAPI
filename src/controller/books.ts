@@ -9,6 +9,7 @@ import BookCategoryModel from "../models/book_category";
 import { formatBookTitle } from "../custom-functions";
 import LogModel from "../models/log";
 import ReadingModel from "../models/reading";
+import { EventTypeEnum, StatusEnum } from "../util/enums";
 
 export const getBooks: RequestHandler = async (req, res, next) => {
   try {
@@ -30,10 +31,10 @@ export const getBooks: RequestHandler = async (req, res, next) => {
 //#region INSERT BOOK
 interface InsertBookBody {
   book_title?: string;
-  author_id?: number;
-  publisher_id?: number;
-  status_id?: number;
-  categories_id?: number[];
+  author_id?: string;
+  publisher_id?: string;
+  status_id?: string;
+  categories_id?: string[];
   book_summary?: string;
 }
 export const insertBook: RequestHandler<
@@ -76,13 +77,13 @@ export const insertBook: RequestHandler<
     let createdReading;
     switch (status_id) {
       //reading
-      case 1:
+      case StatusEnum.okunuyor:
         //create book
         createdBook = await BookModel.create(
           {
             book_title: formatBookTitle(book_title),
             author_id: author_id,
-            status_id: 12,
+            status_id: StatusEnum.okunuyor.toString(),
             publisher_id: publisher_id,
             book_summary: book_summary,
           },
@@ -118,7 +119,7 @@ export const insertBook: RequestHandler<
             user_id: req.session.user_id,
             event_date: new Date(),
             book_id: createdBook.book_id,
-            event_type_id: 25,
+            event_type_id: EventTypeEnum.book_create,
           },
           { transaction: t }
         );
@@ -130,21 +131,21 @@ export const insertBook: RequestHandler<
             event_date: new Date(),
             book_id: createdBook.book_id,
             reading_id: createdReading.reading_id,
-            event_type_id: 28,
+            event_type_id: EventTypeEnum.reading_create,
           },
           { transaction: t }
         );
 
         break;
       //in the library &
-      case 2:
-      case 6:
+      case StatusEnum.kitaplikta:
+      case StatusEnum.satin_alinacak:
         //create book
         createdBook = await BookModel.create(
           {
             book_title: formatBookTitle(book_title),
             author_id: author_id,
-            status_id: status_id,
+            status_id: status_id.toString(),
             publisher_id: publisher_id,
             book_summary: book_summary,
           },
@@ -168,21 +169,21 @@ export const insertBook: RequestHandler<
             user_id: req.session.user_id,
             event_date: new Date(),
             book_id: createdBook.book_id,
-            event_type_id: 25,
+            event_type_id: EventTypeEnum.book_create,
           },
           { transaction: t }
         );
 
         break;
       //readed
-      case 3:
-      case 4:
+      case StatusEnum.okundu:
+      case StatusEnum.yarim_birakildi:
         //create book & left unfinished
         createdBook = await BookModel.create(
           {
             book_title: formatBookTitle(book_title),
             author_id: author_id,
-            status_id: 2,
+            status_id: StatusEnum.kitaplikta.toString(),
             publisher_id: publisher_id,
             book_summary: book_summary,
           },
@@ -218,7 +219,7 @@ export const insertBook: RequestHandler<
             user_id: req.session.user_id,
             event_date: new Date(),
             book_id: createdBook.book_id,
-            event_type_id: 25,
+            event_type_id: EventTypeEnum.book_create,
           },
           { transaction: t }
         );
@@ -230,19 +231,19 @@ export const insertBook: RequestHandler<
             event_date: new Date(),
             book_id: createdBook.book_id,
             reading_id: createdReading.reading_id,
-            event_type_id: 28,
+            event_type_id: EventTypeEnum.reading_create,
           },
           { transaction: t }
         );
         break;
       //readed, not in the library
-      case 7:
+      case StatusEnum.okundu_kitaplikta_degil:
         //create book
         createdBook = await BookModel.create(
           {
             book_title: formatBookTitle(book_title),
             author_id: author_id,
-            status_id: 11,
+            status_id: StatusEnum.kitaplikta_degil.toString(),
             publisher_id: publisher_id,
             book_summary: book_summary,
           },
@@ -265,7 +266,7 @@ export const insertBook: RequestHandler<
           {
             user_id: req.session.user_id,
             book_id: createdBook.book_id,
-            status_id: 3,
+            status_id: StatusEnum.okundu,
           },
           {
             transaction: t,
@@ -278,7 +279,7 @@ export const insertBook: RequestHandler<
             user_id: req.session.user_id,
             event_date: new Date(),
             book_id: createdBook.book_id,
-            event_type_id: 25,
+            event_type_id: EventTypeEnum.book_create,
           },
           { transaction: t }
         );
@@ -290,7 +291,7 @@ export const insertBook: RequestHandler<
             event_date: new Date(),
             book_id: createdBook.book_id,
             reading_id: createdReading.reading_id,
-            event_type_id: 28,
+            event_type_id: EventTypeEnum.reading_create,
           },
           { transaction: t }
         );

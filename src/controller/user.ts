@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import { Resend } from "resend";
 import env from "../util/validateEnv";
 import jwt from "jsonwebtoken";
+import { DecimalDataType } from "sequelize";
 
 //#region AUTHENTICATED USER
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
@@ -117,7 +118,7 @@ export const login: RequestHandler<
     //if user try to login with google account
     if (google_id) {
       const user = await UserModel.findOne({
-        where: { user_google_id: parseInt(google_id) },
+        where: { user_google_id: google_id },
       });
 
       // if google id user exist
@@ -134,7 +135,7 @@ export const login: RequestHandler<
         //if email exist
         if (user) {
           console.log("buraya düştü");
-          user.user_google_id = parseInt(google_id);
+          user.user_google_id = google_id;
           await user.save();
           req.session.user_id = user.user_id;
           req.session.user_authority_id = user.user_authority_id;
@@ -145,7 +146,7 @@ export const login: RequestHandler<
             where: { user_name: user_name },
           });
 
-          const passwordHashed = await bcrypt.hash(google_id, 10);
+          const passwordHashed = await bcrypt.hash(google_id.toString(), 10);
           //böyle bir username yok ise
           if (!checkUserName) {
             const newUser = await UserModel.create({
@@ -153,7 +154,7 @@ export const login: RequestHandler<
               user_password: passwordHashed,
               user_email: email,
               user_email_verified: true,
-              user_google_id: parseInt(google_id),
+              user_google_id: google_id,
             });
 
             req.session.user_id = newUser.user_id;
@@ -166,7 +167,7 @@ export const login: RequestHandler<
               user_password: passwordHashed,
               user_email: email,
               user_email_verified: true,
-              user_google_id: parseInt(google_id),
+              user_google_id: google_id,
             });
 
             req.session.user_id = newUser.user_id;
@@ -421,13 +422,13 @@ export const newPassword: RequestHandler<
 
 //#region FUNCTIONS
 interface userResponseParam {
-  user_id: number;
+  user_id: string;
   user_name: string;
   user_password: string;
   user_email?: string;
-  user_authority_id?: number;
+  user_authority_id?: string;
   user_email_verified?: boolean;
-  user_google_id?: number;
+  user_google_id?: string;
 }
 function createResponseFromUser(user: userResponseParam) {
   return {

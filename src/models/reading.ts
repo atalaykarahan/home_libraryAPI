@@ -15,10 +15,10 @@ import {
       InferAttributes<ReadingInstance>,
       InferCreationAttributes<ReadingInstance>
     > {
-    reading_id: CreationOptional<number>;
-    user_id: number;
-    book_id: number;
-    status_id:number;
+    reading_id: CreationOptional<string>;
+    user_id: string;
+    book_id: string;
+    status_id:string;
     comment?:string;
     deletedAt?:Date;
     createdAt?:Date;
