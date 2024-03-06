@@ -24,6 +24,9 @@ interface BookInstance
   image_path: CreationOptional<string>;
   book_summary: string;
   book_isbn: CreationOptional<number>;
+  deletedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const Book = db.define<BookInstance>(
@@ -63,16 +66,27 @@ const Book = db.define<BookInstance>(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    deletedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    createdAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    updatedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
   },
   {
     tableName: "BOOK",
-    timestamps: false,
+    paranoid: true,
   }
 );
 
-
-Book.belongsTo(PublisherModel, {foreignKey: "publisher_id"});
-Book.belongsTo(AuthorModel, {foreignKey: "author_id"});
-Book.belongsTo(StatusModel, {foreignKey: "status_id"});
+Book.belongsTo(PublisherModel, { foreignKey: "publisher_id" });
+Book.belongsTo(AuthorModel, { foreignKey: "author_id" });
+Book.belongsTo(StatusModel, { foreignKey: "status_id" });
 
 export default Book;

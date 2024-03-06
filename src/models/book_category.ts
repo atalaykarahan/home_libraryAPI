@@ -14,6 +14,9 @@ interface BookCategoryInstance
   > {
   book_id: string;
   category_id: string;
+  deletedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const BookCategory = db.define<BookCategoryInstance>(
@@ -29,10 +32,22 @@ const BookCategory = db.define<BookCategoryInstance>(
       allowNull: false,
       primaryKey: true,
     },
+    deletedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    createdAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    updatedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
   },
   {
     tableName: "BOOK_CATEGORY",
-    timestamps: false,
+    paranoid: true,
   }
 );
 

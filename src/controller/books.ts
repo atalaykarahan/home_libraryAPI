@@ -11,6 +11,7 @@ import LogModel from "../models/log";
 import ReadingModel from "../models/reading";
 import { EventTypeEnum, StatusEnum } from "../util/enums";
 
+//#region GET ALL BOOKS
 export const getBooks: RequestHandler = async (req, res, next) => {
   try {
     const books = await BookModel.findAll({
@@ -27,6 +28,7 @@ export const getBooks: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
 
 //#region INSERT BOOK
 interface InsertBookBody {
@@ -52,7 +54,7 @@ export const insertBook: RequestHandler<
   const t = await db.transaction();
   try {
     //if user send a missing parameters
-      if (
+    if (
       !book_title ||
       !author_id ||
       !status_id ||
@@ -309,4 +311,59 @@ export const insertBook: RequestHandler<
     next(error);
   }
 };
+//#endregion
+
+//#region DELETE BOOOK
+export const deleteBook: RequestHandler = async (req, res, next) => {
+  const book_id = req.params.book_id;
+  const user_id = req.session.user_id;
+  const t = await db.transaction();
+
+  try {
+    if (!book_id || !user_id) createHttpError(400, "missing parameters");
+
+    const createBookLog = await LogModel.findOne({
+      where: {
+        user_id: user_id,
+        book_id: book_id,
+        event_type_id: EventTypeEnum.book_create,
+      },
+    });
+
+    if (!createBookLog)
+      throw createHttpError(403, "You are not authorized to delete this data.");
+
+    const readings = await ReadingModel.findAll({
+      where: { book_id: book_id },
+    });
+
+    if (readings.length > 0)
+      throw createHttpError(
+        409,
+        "The book cannot be deleted because there are associated readings."
+      );
+
+    await BookCategoryModel.destroy({
+      where: { book_id: book_id },
+      transaction: t,
+    });
+    await BookModel.destroy({ where: { book_id: book_id }, transaction: t });
+
+    await LogModel.create(
+      {
+        user_id: user_id,
+        book_id: book_id,
+        event_type_id: EventTypeEnum.book_delete,
+      },
+      { transaction: t }
+    );
+
+    t.commit();
+    res.sendStatus(204);
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
+};
+
 //#endregion
