@@ -8,6 +8,7 @@ import createHttpError from "http-errors";
 import { EventTypeEnum } from "../util/enums";
 import { formatBookTitle } from "../custom-functions";
 
+//#region INSERT CATEGORY
 export const insertCategory: RequestHandler = async (req, res, next) => {
   const incomingCategory = req.params.category;
   const t = await db.transaction();
@@ -16,11 +17,6 @@ export const insertCategory: RequestHandler = async (req, res, next) => {
     if (!incomingCategory) throw createHttpError(400, "Missing parameters");
 
     const formattedCategory = formatBookTitle(incomingCategory);
-
-    // Büyük harf yapma işlemi
-    // const formattedCategory = incomingCategory
-    //   .toLowerCase()
-    //   .replace(/\b\w/g, (char) => char.toUpperCase());
 
     //check same category is exists
     const category = await CategoryModel.findOne({
@@ -53,7 +49,9 @@ export const insertCategory: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
 
+//#region GET ALL CATEGORIES AND BOOKS COUNT
 export const getCategoriesAndBooksCount: RequestHandler = async (
   req,
   res,
@@ -64,6 +62,7 @@ export const getCategoriesAndBooksCount: RequestHandler = async (
     const result = await CategoryModel.findAll({
       attributes: [
         "category_name",
+        "category_id",
         [Sequelize.fn("COUNT", Sequelize.col("book_id")), "bookCount"],
       ],
       include: [
@@ -81,12 +80,73 @@ export const getCategoriesAndBooksCount: RequestHandler = async (
     next(error);
   }
 };
+//#endregion
 
-export const getAllCategories:  RequestHandler = async (req, res, next) => {
+//#region GET ALL CATEGORIES
+export const getAllCategories: RequestHandler = async (req, res, next) => {
   try {
     const result = await CategoryModel.findAll();
     res.status(200).json(result);
   } catch (error) {
     next(error);
   }
+};
+//#endregion
+
+//#region PATCH & UPDATE CATEGORY
+interface PatchCategoryBody {
+  category_name?: string;
+  category_id?: string;
 }
+export const patchCategory: RequestHandler<
+  unknown,
+  unknown,
+  PatchCategoryBody,
+  unknown
+> = async (req, res, next) => {
+  const category_name = req.body.category_name;
+  const category_id = req.body.category_id;
+  const user_id = req.session.user_id;
+
+  const t = await db.transaction();
+
+  try {
+    if (!category_name || !category_id || !user_id)
+      throw createHttpError(400, "Missing parameters");
+
+    const categoryCreateLog = await LogModel.findOne({
+      where: {
+        category_id: category_id,
+        event_type_id: EventTypeEnum.category_create,
+        user_id: user_id,
+      },
+    });
+
+    if (!categoryCreateLog)
+      throw createHttpError(403, "You are not authorized to delete this data.");
+
+    const category = await CategoryModel.findByPk(category_id);
+
+    if (!category) throw createHttpError(404, "Category not found");
+
+    category.category_name = category_name;
+
+    await category.save({ transaction: t });
+
+    await LogModel.create(
+      {
+        user_id: user_id,
+        event_type_id: EventTypeEnum.category_update,
+        category_id: category.category_id,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    res.sendStatus(200);
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
+};
+//#endregion

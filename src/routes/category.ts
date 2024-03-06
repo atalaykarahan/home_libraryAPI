@@ -1,5 +1,6 @@
 import express from "express";
 import * as CategoryController from "../controller/category";
+import { requiresAuth } from "../middleware/auth";
 
 const router = express.Router();
 
@@ -9,8 +10,13 @@ router.get(
   CategoryController.getCategoriesAndBooksCount
 );
 
+// add category
 router.get("/insert/:category", CategoryController.insertCategory);
 
+//get all categories
 router.get("/", CategoryController.getAllCategories);
-export default router;
 
+//update & patch category
+router.patch("/", requiresAuth, CategoryController.patchCategory);
+
+export default router;
