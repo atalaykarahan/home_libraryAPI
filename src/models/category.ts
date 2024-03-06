@@ -14,6 +14,9 @@ interface CategoryInstance
   > {
   category_id: CreationOptional<string>;
   category_name: string;
+  deletedAt?:Date;
+    createdAt?:Date;
+    updatedAt?:Date;
 }
 
 const Category = db.define<CategoryInstance>(
@@ -29,10 +32,22 @@ const Category = db.define<CategoryInstance>(
       allowNull: false,
       unique: true,
     },
+    deletedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    createdAt:{
+      type:DataTypes.TIME,
+      allowNull:true,
+    },
+    updatedAt:{
+      type:DataTypes.TIME,
+      allowNull:true,
+    }
   },
   {
     tableName: "CATEGORY",
-    timestamps: false,
+    paranoid:true,
   }
 );
 

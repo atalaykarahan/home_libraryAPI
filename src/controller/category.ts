@@ -123,7 +123,7 @@ export const patchCategory: RequestHandler<
     });
 
     if (!categoryCreateLog)
-      throw createHttpError(403, "You are not authorized to delete this data.");
+      throw createHttpError(403, "You are not authorized to update this data.");
 
     const category = await CategoryModel.findByPk(category_id);
 
@@ -146,6 +146,59 @@ export const patchCategory: RequestHandler<
     res.sendStatus(200);
   } catch (error) {
     await t.rollback();
+    next(error);
+  }
+};
+//#endregion
+
+//#region DELETE CATEGORY
+export const deleteCategory: RequestHandler = async (req, res, next) => {
+  const category_id = req.params.category_id;
+  const user_id = req.session.user_id;
+  const t = await db.transaction();
+
+  try {
+    if (!category_id) throw createHttpError(400, "Missing parameters");
+
+    const createCategoryLog = await LogModel.findOne({
+      where: {
+        category_id: category_id,
+        event_type_id: EventTypeEnum.category_create,
+        user_id: user_id,
+      },
+    });
+
+    if (!createCategoryLog)
+      throw createHttpError(403, "You are not authorized to delete this data.");
+
+    const book_ids = await BookCategory.findAll({
+      where: { category_id: category_id },
+    });
+
+    if (book_ids.length > 0)
+      throw createHttpError(
+        403,
+        "There are books associated with this category. You cannot delete it."
+      );
+
+    await CategoryModel.destroy({
+      where: { category_id: category_id },
+      transaction: t,
+    });
+
+    await LogModel.create(
+      {
+        user_id: user_id,
+        category_id: category_id,
+        event_type_id: EventTypeEnum.category_delete,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+
+    res.sendStatus(201);
+  } catch (error) {
     next(error);
   }
 };

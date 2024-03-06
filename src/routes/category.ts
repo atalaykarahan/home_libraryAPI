@@ -19,4 +19,7 @@ router.get("/", CategoryController.getAllCategories);
 //update & patch category
 router.patch("/", requiresAuth, CategoryController.patchCategory);
 
+//delete category
+router.delete("/:category_id",requiresAuth, CategoryController.deleteCategory);
+
 export default router;
