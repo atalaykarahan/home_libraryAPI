@@ -6,6 +6,7 @@ import {
   Model,
 } from "sequelize";
 import db from "../../db";
+import BookModel from "./book";
 
 interface AuthorInstance
   extends Model<
@@ -54,5 +55,7 @@ const Author = db.define<AuthorInstance>(
     paranoid: true,
   }
 );
+
+Author.hasOne(BookModel, { foreignKey: "author_id" });
 
 export default Author;

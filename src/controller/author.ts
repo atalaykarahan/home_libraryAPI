@@ -113,6 +113,8 @@ export const getAuthorsAndBooksCount: RequestHandler = async (
       group: ["AUTHOR.author_id"],
     });
 
+    console.log(result);
+
     res.status(200).json(result);
   } catch (error) {
     next(error);
@@ -162,7 +164,7 @@ interface PatchAuthorBody {
   author_surname?:string;
   author_id?: string;
 }
-export const patchCategory: RequestHandler<
+export const patchAuthor: RequestHandler<
   unknown,
   unknown,
   PatchAuthorBody,
