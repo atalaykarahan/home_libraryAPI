@@ -329,7 +329,6 @@ export const deleteBook: RequestHandler = async (req, res, next) => {
         event_type_id: EventTypeEnum.book_create,
       },
     });
-
     if (!createBookLog)
       throw createHttpError(403, "You are not authorized to delete this data.");
 

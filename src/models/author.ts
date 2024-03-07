@@ -15,6 +15,9 @@ interface AuthorInstance
   author_id: CreationOptional<string>;
   author_name: string;
   author_surname?: string;
+  deletedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const Author = db.define<AuthorInstance>(
@@ -33,10 +36,22 @@ const Author = db.define<AuthorInstance>(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    deletedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    createdAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    updatedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
   },
   {
     tableName: "AUTHOR",
-    timestamps: false,
+    paranoid: true,
   }
 );
 

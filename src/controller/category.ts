@@ -163,7 +163,7 @@ export const deleteCategory: RequestHandler = async (req, res, next) => {
     const createCategoryLog = await LogModel.findOne({
       where: {
         category_id: category_id,
-        event_type_id: EventTypeEnum.category_create,
+        event_type_id: EventTypeEnum.category_delete,
         user_id: user_id,
       },
     });
@@ -177,7 +177,7 @@ export const deleteCategory: RequestHandler = async (req, res, next) => {
 
     if (book_ids.length > 0)
       throw createHttpError(
-        403,
+        409,
         "There are books associated with this category. You cannot delete it."
       );
 
@@ -197,7 +197,7 @@ export const deleteCategory: RequestHandler = async (req, res, next) => {
 
     await t.commit();
 
-    res.sendStatus(201);
+    res.sendStatus(204);
   } catch (error) {
     next(error);
   }

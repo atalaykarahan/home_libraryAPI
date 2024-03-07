@@ -7,7 +7,7 @@ import db from "../../db";
 import { Sequelize } from "sequelize";
 import { EventTypeEnum } from "../util/enums";
 
-// INSERT
+//#region INSERT AUTHOR
 interface CreateAuthorBody {
   author_name?: string;
   author_surname?: string;
@@ -88,7 +88,9 @@ export const insertAuthor: RequestHandler<
     next(error);
   }
 };
+//#endregion
 
+//#region FET ALL AUTHORS AND BOOKS COUNT
 export const getAuthorsAndBooksCount: RequestHandler = async (
   req,
   res,
@@ -116,7 +118,9 @@ export const getAuthorsAndBooksCount: RequestHandler = async (
     next(error);
   }
 };
+//#endregion
 
+//#region GET ALL AUTHORS
 export const getAllAuthors: RequestHandler = async (req, res, next) => {
   try {
     const result = await AuthorModel.findAll();
@@ -129,7 +133,9 @@ export const getAllAuthors: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
 
+//#region GET ALL AUTHORS FOR SELECT BOX
 export const getAllAuthorsSelect: RequestHandler = async (req, res, next) => {
   try {
     const result = await AuthorModel.findAll();
@@ -148,3 +154,118 @@ export const getAllAuthorsSelect: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
+
+//#region PATCH & UPDATE AUTHOR
+interface PatchAuthorBody {
+  author_name?: string;
+  author_surname?:string;
+  author_id?: string;
+}
+export const patchCategory: RequestHandler<
+  unknown,
+  unknown,
+  PatchAuthorBody,
+  unknown
+> = async (req, res, next) => {
+  const author_name = req.body.author_name;
+  const author_surname = req.body.author_surname;
+  const author_id = req.body.author_id;
+  const user_id = req.session.user_id;
+
+  const t = await db.transaction();
+
+  try {
+    if (!author_name || !author_surname || !author_id || !user_id)
+      throw createHttpError(400, "Missing parameters");
+
+    const authorCreateLog = await LogModel.findOne({
+      where: {
+        author_id: author_id,
+        event_type_id: EventTypeEnum.author_create,
+        user_id: user_id,
+      },
+    });
+
+    if (!authorCreateLog)
+      throw createHttpError(403, "You are not authorized to update this data.");
+
+    const author = await AuthorModel.findByPk(author_id);
+
+    if (!author) throw createHttpError(404, "Author not found");
+
+    author.author_name = author_name;
+    author.author_surname = author_surname;
+
+    await author.save({ transaction: t });
+
+    await LogModel.create(
+      {
+        user_id: user_id,
+        event_type_id: EventTypeEnum.author_update,
+        author_id: author.author_id,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    res.sendStatus(200);
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
+};
+//#endregion
+
+//#region DELETE AUTHOR
+export const deleteAuthor: RequestHandler = async (req, res, next) => {
+  const author_id = req.params.author_id;
+  const user_id = req.session.user_id;
+  const t = await db.transaction();
+
+  try {
+    if (!author_id) throw createHttpError(400, "Missing parameters");
+
+    const createAuthorLog = await LogModel.findOne({
+      where: {
+        author_id: author_id,
+        event_type_id: EventTypeEnum.author_create,
+        user_id: user_id,
+      },
+    });
+
+    if (!createAuthorLog)
+      throw createHttpError(403, "You are not authorized to delete this data.");
+
+    const book_ids = await BookModel.findAll({
+      where: { author_id: author_id },
+    });
+
+    if (book_ids.length > 0)
+      throw createHttpError(
+        409,
+        "There are books associated with this author. You cannot delete it."
+      );
+
+    await AuthorModel.destroy({
+      where: { author_id: author_id },
+      transaction: t,
+    });
+
+    await LogModel.create(
+      {
+        user_id: user_id,
+        author_id: author_id,
+        event_type_id: EventTypeEnum.author_delete,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+
+    res.sendStatus(204);
+  } catch (error) {
+    next(error);
+  }
+};
+//#endregion
