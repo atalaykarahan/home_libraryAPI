@@ -24,7 +24,7 @@ router.get("/select",AuthorController.getAllAuthorsSelect)
 router.patch("/", requiresAuth, AuthorController.patchAuthor);
 
 //delete author
-router.delete("/:category_id", requiresAuth, AuthorController.deleteAuthor);
+router.delete("/:author_id", requiresAuth, AuthorController.deleteAuthor);
 
 
 export default router;

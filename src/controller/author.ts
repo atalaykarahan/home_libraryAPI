@@ -97,31 +97,18 @@ export const getAuthorsAndBooksCount: RequestHandler = async (
   next
 ) => {
   try {
-    // const result = await AuthorModel.findAll({
-    //   attributes: [
-    //     "author_name",
-    //     "author_surname",
-    //     [Sequelize.fn("COUNT", Sequelize.col("book_id")), "bookCount"],
-    //   ],
-    //   include: [
-    //     {
-    //       model: BookModel,
-    //       attributes: [],
-    //       required: false,
-    //     },
-    //   ],
-    //   group: ["AUTHOR.author_id"],
-    // });
-
-    const result = await BookModel.findAll({
+    const result = await AuthorModel.findAll({
       attributes: [
+        "author_id",
+        "author_name",
+        "author_surname",
         [Sequelize.fn("COUNT", Sequelize.col("book_id")), "bookCount"],
       ],
       include: [
         {
-          model: AuthorModel,
-          attributes: ["author_name", "author_surname"],
-          required: true,
+          model: BookModel,
+          attributes: [],
+          required: false,
         },
       ],
       group: ["AUTHOR.author_id"],
