@@ -56,6 +56,6 @@ const Author = db.define<AuthorInstance>(
   }
 );
 
-Author.hasOne(BookModel, { foreignKey: "author_id" });
+// Author.hasOne(BookModel, { foreignKey: "author_id" });
 
 export default Author;

@@ -90,24 +90,38 @@ export const insertAuthor: RequestHandler<
 };
 //#endregion
 
-//#region FET ALL AUTHORS AND BOOKS COUNT
+//#region GET ALL AUTHORS AND BOOKS COUNT
 export const getAuthorsAndBooksCount: RequestHandler = async (
   req,
   res,
   next
 ) => {
   try {
-    const result = await AuthorModel.findAll({
+    // const result = await AuthorModel.findAll({
+    //   attributes: [
+    //     "author_name",
+    //     "author_surname",
+    //     [Sequelize.fn("COUNT", Sequelize.col("book_id")), "bookCount"],
+    //   ],
+    //   include: [
+    //     {
+    //       model: BookModel,
+    //       attributes: [],
+    //       required: false,
+    //     },
+    //   ],
+    //   group: ["AUTHOR.author_id"],
+    // });
+
+    const result = await BookModel.findAll({
       attributes: [
-        "author_name",
-        "author_surname",
         [Sequelize.fn("COUNT", Sequelize.col("book_id")), "bookCount"],
       ],
       include: [
         {
-          model: BookModel,
-          attributes: [],
-          required: false,
+          model: AuthorModel,
+          attributes: ["author_name", "author_surname"],
+          required: true,
         },
       ],
       group: ["AUTHOR.author_id"],
@@ -161,7 +175,7 @@ export const getAllAuthorsSelect: RequestHandler = async (req, res, next) => {
 //#region PATCH & UPDATE AUTHOR
 interface PatchAuthorBody {
   author_name?: string;
-  author_surname?:string;
+  author_surname?: string;
   author_id?: string;
 }
 export const patchAuthor: RequestHandler<
