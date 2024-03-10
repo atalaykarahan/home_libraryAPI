@@ -163,7 +163,7 @@ export const deleteCategory: RequestHandler = async (req, res, next) => {
     const createCategoryLog = await LogModel.findOne({
       where: {
         category_id: category_id,
-        event_type_id: EventTypeEnum.category_delete,
+        event_type_id: EventTypeEnum.category_create,
         user_id: user_id,
       },
     });
