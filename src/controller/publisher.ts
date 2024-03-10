@@ -7,6 +7,7 @@ import { Sequelize } from "sequelize";
 import db from "../../db";
 import { EventTypeEnum } from "../util/enums";
 
+//#region GET ALL PUBLISHERS
 export const getAllPublisher: RequestHandler = async (req, res, next) => {
   try {
     PublisherModel.findAll().then((b) => {
@@ -16,7 +17,9 @@ export const getAllPublisher: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
 
+//#region INSERT PUBLISHER
 export const insertPublisher: RequestHandler = async (req, res, next) => {
   const incomingPublisher = req.params.publisher;
   const t = await db.transaction();
@@ -57,7 +60,9 @@ export const insertPublisher: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
 
+//#region GET ALL PUBLISHERS AND BOOKS COUNT
 export const getPublishersAndBooksCount: RequestHandler = async (
   req,
   res,
@@ -67,6 +72,7 @@ export const getPublishersAndBooksCount: RequestHandler = async (
     const result = await PublisherModel.findAll({
       attributes: [
         "publisher_name",
+        "publisher_id",
         [Sequelize.fn("COUNT", Sequelize.col("book_id")), "bookCount"],
       ],
       include: [
@@ -84,7 +90,10 @@ export const getPublishersAndBooksCount: RequestHandler = async (
     next(error);
   }
 };
+//#endregion
 
+
+//bu fonksiyonu daha sonra fnc kısmına taşı
 function turkceBuyukHarfeDonustur(metin: string): string {
   const harfDuzeltici: { [key: string]: string } = {
     i: "İ",
