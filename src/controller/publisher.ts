@@ -6,6 +6,7 @@ import createHttpError from "http-errors";
 import { Sequelize } from "sequelize";
 import db from "../../db";
 import { EventTypeEnum } from "../util/enums";
+import { turkceBuyukHarfeDonustur } from "../custom-functions";
 
 //#region GET ALL PUBLISHERS
 export const getAllPublisher: RequestHandler = async (req, res, next) => {
@@ -91,18 +92,3 @@ export const getPublishersAndBooksCount: RequestHandler = async (
   }
 };
 //#endregion
-
-
-//bu fonksiyonu daha sonra fnc kısmına taşı
-function turkceBuyukHarfeDonustur(metin: string): string {
-  const harfDuzeltici: { [key: string]: string } = {
-    i: "İ",
-    ı: "I",
-  };
-
-  return metin
-    .replace(/([iı])/g, function (match) {
-      return harfDuzeltici[match];
-    })
-    .toUpperCase();
-}
