@@ -111,6 +111,7 @@ export const login: RequestHandler<
   const google_id = req.body.google_id;
 
   try {
+    console.log("gelen bilgiler bunlar", "kullanıcı adı :",user_name, "şifre ise:",password);
     if (!user_name || !password) {
       throw createHttpError(400, "Missing parameters");
     }

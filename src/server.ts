@@ -27,9 +27,16 @@ db.authenticate()
 const app = express();
 const port = env.PORT;
 
+// app.use(
+//   cors({
+//     origin: "http://localhost:3001",
+//     credentials: true,
+//   })
+// );
+
 app.use(
   cors({
-    origin: "http://localhost:3001",
+    origin: "http://192.168.1.29:3001",
     credentials: true,
   })
 );

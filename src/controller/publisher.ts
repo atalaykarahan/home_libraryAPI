@@ -92,3 +92,114 @@ export const getPublishersAndBooksCount: RequestHandler = async (
   }
 };
 //#endregion
+
+//#region PATCH & UPDATE PUBLISHER
+interface PatchPublisherBody {
+  publisher_name?: string;
+  publisher_id?: string;
+}
+export const patchPublisher: RequestHandler<
+  unknown,
+  unknown,
+  PatchPublisherBody,
+  unknown
+> = async (req, res, next) => {
+  const publisher_name = req.body.publisher_name;
+  const publisher_id = req.body.publisher_id;
+  const user_id = req.session.user_id;
+
+  const t = await db.transaction();
+
+  try {
+    if (!publisher_name || !publisher_id || !user_id)
+      throw createHttpError(400, "Missing parameters");
+
+    const publisherCreateLog = await LogModel.findOne({
+      where: {
+        publisher_id: publisher_id,
+        event_type_id: EventTypeEnum.publisher_create,
+        user_id: user_id,
+      },
+    });
+
+    if (!publisherCreateLog)
+      throw createHttpError(403, "You are not authorized to update this data.");
+
+    const publisher = await PublisherModel.findByPk(publisher_id);
+
+    if (!publisher) throw createHttpError(404, "Publisher not found");
+
+    publisher.publisher_name = publisher_name;
+
+    await publisher.save({ transaction: t });
+
+    await LogModel.create(
+      {
+        user_id: user_id,
+        event_type_id: EventTypeEnum.publisher_update,
+        publisher_id: publisher.publisher_id,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    res.sendStatus(200);
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
+};
+//#endregion
+
+//#region DELETE CATEGORY
+export const deletePublisher: RequestHandler = async (req, res, next) => {
+  const publisher_id = req.params.publisher_id;
+  const user_id = req.session.user_id;
+  const t = await db.transaction();
+
+  try {
+    if (!publisher_id) throw createHttpError(400, "Missing parameters");
+
+    const createPublisherLog = await LogModel.findOne({
+      where: {
+        publisher_id: publisher_id,
+        event_type_id: EventTypeEnum.publisher_create,
+        user_id: user_id,
+      },
+    });
+
+    if (!createPublisherLog)
+      throw createHttpError(403, "You are not authorized to delete this data.");
+
+    const book_ids = await BookModel.findAll({
+      where: { publisher_id: publisher_id },
+    });
+
+    if (book_ids.length > 0)
+      throw createHttpError(
+        409,
+        "There are books associated with this publisher. You cannot delete it."
+      );
+
+    await PublisherModel.destroy({
+      where: { publisher_id: publisher_id },
+      transaction: t,
+    });
+
+    await LogModel.create(
+      {
+        user_id: user_id,
+        publisher_id: publisher_id,
+        event_type_id: EventTypeEnum.publisher_delete,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+
+    res.sendStatus(204);
+  } catch (error) {
+    next(error);
+  }
+};
+//#endregion

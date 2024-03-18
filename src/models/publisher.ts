@@ -14,6 +14,9 @@ interface PublisherInstance
   > {
   publisher_id: CreationOptional<string>;
   publisher_name: string;
+  deletedAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const Publisher = db.define<PublisherInstance>(
@@ -29,10 +32,22 @@ const Publisher = db.define<PublisherInstance>(
       allowNull: false,
       unique: true,
     },
+    deletedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    createdAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
+    updatedAt: {
+      type: DataTypes.TIME,
+      allowNull: true,
+    },
   },
   {
     tableName: "PUBLISHER",
-    timestamps: false,
+    paranoid: true,
   }
 );
 
