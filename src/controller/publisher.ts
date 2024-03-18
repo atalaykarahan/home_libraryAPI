@@ -30,12 +30,10 @@ export const insertPublisher: RequestHandler = async (req, res, next) => {
 
     //check same publisher is exists
     const publisher = await PublisherModel.findOne({
-      where: { publisher_name: incomingPublisher },
+      where: { publisher_name: incomingPublisher.toUpperCase() },
     });
 
-    if (publisher) {
-      throw createHttpError(401, "This publisher already exists.");
-    }
+    if (publisher) throw createHttpError(409, "This publisher already exists.");
 
     const createdPublisher = await PublisherModel.create(
       {

@@ -36,7 +36,7 @@ export const insertAuthor: RequestHandler<
       where: { author_name: formattedName },
     });
 
-    if (author) throw createHttpError(401, "This author already exists.");
+    if (author) throw createHttpError(409, "This author already exists.");
 
     if (author_surname) {
       const formattedSurname = author_surname

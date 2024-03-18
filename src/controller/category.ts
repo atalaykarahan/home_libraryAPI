@@ -23,7 +23,7 @@ export const insertCategory: RequestHandler = async (req, res, next) => {
       where: { category_name: formattedCategory },
     });
 
-    if (category) throw createHttpError(401, "This category already exists.");
+    if (category) throw createHttpError(409, "This category already exists.");
 
     const createdCategory = await CategoryModel.create(
       {

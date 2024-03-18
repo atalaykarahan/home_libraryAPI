@@ -110,10 +110,8 @@ export const addMyReading: RequestHandler = async (req, res, next) => {
       },
     });
 
-    console.log("is exists kısmına geldi ********************  ", isExist);
-
     if (isExist) {
-      throw createHttpError(400, "You already add this book");
+      throw createHttpError(409, "You already add this book");
     }
     //check if status is correct
     if (

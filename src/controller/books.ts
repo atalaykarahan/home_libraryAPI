@@ -71,7 +71,7 @@ export const insertBook: RequestHandler<
       where: { book_title: book_title, publisher_id: publisher_id },
     });
 
-    if (existingBook) throw createHttpError(409, "Book already exists");
+    if (existingBook) throw createHttpError(409, "This book already exists.");
 
     //after this line all insert transaction is begins
 
