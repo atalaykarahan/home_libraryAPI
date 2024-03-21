@@ -6,6 +6,7 @@ import {
   InferCreationAttributes,
   Model,
 } from "sequelize";
+import ReadingModel from "./reading";
 import db from "../../db";
 
 interface UserInstance

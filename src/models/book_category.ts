@@ -5,7 +5,7 @@ import {
   Model,
 } from "sequelize";
 import db from "../../db";
-import Category from "./category";
+import CategoryModel from "./category";
 
 interface BookCategoryInstance
   extends Model<
@@ -51,6 +51,7 @@ const BookCategory = db.define<BookCategoryInstance>(
   }
 );
 
-Category.hasMany(BookCategory, { foreignKey: "category_id" });
+CategoryModel.belongsTo(BookCategory, { foreignKey: "category_id" });
+BookCategory.belongsTo(CategoryModel, {foreignKey: "category_id"})
 
 export default BookCategory;

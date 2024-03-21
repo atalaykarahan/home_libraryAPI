@@ -1,11 +1,17 @@
 import { RequestHandler } from "express";
 import UserModel from "../models/user";
+import ReadingModel from "../models/reading";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { Resend } from "resend";
 import env from "../util/validateEnv";
 import jwt from "jsonwebtoken";
+import BookModel from "../models/book";
+import BookCategoryModel from "../models/book_category";
+import CategoryModel from "../models/category";
 import { DecimalDataType } from "sequelize";
+import { Sequelize } from "sequelize";
+import { StatusEnum } from "../util/enums";
 
 //#region AUTHENTICATED USER
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
@@ -111,7 +117,13 @@ export const login: RequestHandler<
   const google_id = req.body.google_id;
 
   try {
-    console.log("gelen bilgiler bunlar", "kullanıcı adı :",user_name, "şifre ise:",password);
+    console.log(
+      "gelen bilgiler bunlar",
+      "kullanıcı adı :",
+      user_name,
+      "şifre ise:",
+      password
+    );
     if (!user_name || !password) {
       throw createHttpError(400, "Missing parameters");
     }
@@ -124,7 +136,9 @@ export const login: RequestHandler<
 
       // if google id user exist
       if (user) {
-        console.log("normalde sadece buraya düşmeli yani bu google id değerine sahip bir user var ve o user'ı dönmeli")
+        console.log(
+          "normalde sadece buraya düşmeli yani bu google id değerine sahip bir user var ve o user'ı dönmeli"
+        );
         req.session.user_id = user.user_id;
         req.session.user_authority_id = user.user_authority_id;
         res.status(201).json(createResponseFromUser(user));
@@ -225,7 +239,6 @@ export const login: RequestHandler<
         res.status(201).json(createResponseFromUser(user));
       }
     }
-
   } catch (error) {
     next(error);
   }
@@ -398,8 +411,8 @@ export const newPassword: RequestHandler<
       });
 
       if (!user) throw createHttpError(401, "User not found!");
-
-      user.user_password = password;
+      const passwordHashed = await bcrypt.hash(password, 10);
+      user.user_password = passwordHashed;
       await user.save();
 
       res.status(201).json({ message: "Password successfully changed." });
@@ -419,6 +432,91 @@ export const newPassword: RequestHandler<
   }
 };
 
+//#endregion
+
+//#region USER BOOK GRID LIST
+export const userBookGridList: RequestHandler = async (req, res, next) => {
+  try {
+    const users = await UserModel.findAll({
+      attributes: [
+        "user_id",
+        "user_name",
+        [
+          Sequelize.literal(`(
+          SELECT COUNT(*)
+          FROM "READING" AS "reading"
+          WHERE
+              "reading"."user_id" = "user"."user_id" 
+              AND "reading"."deletedAt" IS NULL
+      )`),
+          "interacted_book_count",
+        ],
+        [
+          Sequelize.literal(`(
+          SELECT COUNT(*)
+          FROM "READING" AS "reading"
+          WHERE
+              "reading"."user_id" = "user"."user_id" 
+              AND "reading"."status_id" = ${StatusEnum.okundu}
+              AND "reading"."deletedAt" IS NULL
+
+      )`),
+          "completed_book_count",
+        ],
+        [
+          Sequelize.literal(`(
+          SELECT COUNT(*)
+          FROM "READING" AS "reading"
+          WHERE
+              "reading"."user_id" = "user"."user_id" 
+              AND "reading"."status_id" = ${StatusEnum.yarim_birakildi}
+              AND "reading"."deletedAt" IS NULL
+      )`),
+          "abandoned_book_count",
+        ],
+        [
+          Sequelize.literal(`(
+            SELECT CONCAT(author.author_name, ' ', author.author_surname) AS author_full_name
+            FROM "READING" as "reading"
+            LEFT JOIN "BOOK" as "book" on "book"."book_id" = "reading"."book_id"
+            LEFT JOIN "AUTHOR" as "author" on "author"."author_id" = "book"."author_id"
+            where "reading"."user_id" = "user"."user_id"
+            and "reading"."deletedAt" IS null
+            GROUP BY CONCAT(author.author_name, ' ', author.author_surname)
+            ORDER BY COUNT(*) DESC
+            LIMIT 1
+      )`),
+          "favorite_author",
+        ],
+      ],
+      include: [
+        {
+          model: ReadingModel,
+          attributes: ["status_id"],
+          include: [
+            {
+              model: BookModel,
+              attributes: ["book_id", "book_title", "image_path"],
+              include: [
+                {
+                  model: BookCategoryModel,
+                  attributes: ["category_id"],
+                  include: [
+                    { model: CategoryModel, attributes: ["category_name"] },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    res.status(200).json(users);
+  } catch (error) {
+    next(error);
+  }
+};
 //#endregion
 
 //#region FUNCTIONS

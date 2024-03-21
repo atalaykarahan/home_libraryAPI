@@ -10,6 +10,7 @@ import db from "../../db";
 import PublisherModel from "./publisher";
 import AuthorModel from "./author";
 import StatusModel from "./status";
+import BookCategoryModel from "./book_category";
 
 interface BookInstance
   extends Model<
@@ -90,5 +91,7 @@ PublisherModel.hasMany(Book, {foreignKey: "publisher_id"});
 Book.belongsTo(AuthorModel, {foreignKey: "author_id"});
 Book.belongsTo(PublisherModel, { foreignKey: "publisher_id" });
 Book.belongsTo(StatusModel, { foreignKey: "status_id" });
+Book.hasMany(BookCategoryModel, {foreignKey: "book_id"});
+BookCategoryModel.hasMany(Book, {foreignKey: "book_id"});
 
 export default Book;
