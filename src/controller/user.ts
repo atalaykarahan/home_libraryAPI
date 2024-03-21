@@ -497,15 +497,6 @@ export const userBookGridList: RequestHandler = async (req, res, next) => {
             {
               model: BookModel,
               attributes: ["book_id", "book_title", "image_path"],
-              include: [
-                {
-                  model: BookCategoryModel,
-                  attributes: ["category_id"],
-                  include: [
-                    { model: CategoryModel, attributes: ["category_name"] },
-                  ],
-                },
-              ],
             },
           ],
         },
