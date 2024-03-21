@@ -72,6 +72,7 @@ import {
   Reading.belongsTo(UserModel, {foreignKey: "user_id"});
   UserModel.hasMany(Reading,{ foreignKey:"user_id" });
   Reading.belongsTo(BookModel, {foreignKey: "book_id"});
+  BookModel.hasMany(Reading, { foreignKey: "book_id" });
   Reading.belongsTo(StatusModel, {foreignKey: "status_id"});
 
 

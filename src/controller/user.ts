@@ -489,18 +489,6 @@ export const userBookGridList: RequestHandler = async (req, res, next) => {
           "favorite_author",
         ],
       ],
-      include: [
-        {
-          model: ReadingModel,
-          attributes: ["status_id"],
-          include: [
-            {
-              model: BookModel,
-              attributes: ["book_id", "book_title", "image_path"],
-            },
-          ],
-        },
-      ],
     });
 
     res.status(200).json(users);

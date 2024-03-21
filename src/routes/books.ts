@@ -13,4 +13,8 @@ router.post("/insert", BooksController.insertBook);
 //Delete book
 router.delete("/:book_id", requiresAuth, BooksController.deleteBook);
 
+//data-grid collapse values for users page
+router.get("/userBookGridCollapseList/:user_id", BooksController.userBookGridCollapseList);
+
+
 export default router;

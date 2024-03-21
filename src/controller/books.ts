@@ -10,6 +10,7 @@ import { formatBookTitle } from "../custom-functions";
 import LogModel from "../models/log";
 import ReadingModel from "../models/reading";
 import { EventTypeEnum, StatusEnum } from "../util/enums";
+import { Sequelize } from "sequelize";
 
 //#region GET ALL BOOKS
 export const getBooks: RequestHandler = async (req, res, next) => {
@@ -365,4 +366,44 @@ export const deleteBook: RequestHandler = async (req, res, next) => {
   }
 };
 
+//#endregion
+
+//#region USER BOOK GRID COLLAPSE LIST
+export const userBookGridCollapseList: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  const user_id = req.params.user_id;
+  try {
+    const books = await BookModel.findAll({
+      attributes: [
+        "book_title",
+        "image_path",
+        [
+          Sequelize.literal(`(
+          SELECT status_name
+          FROM "STATUS" as "status"
+          RIGHT JOIN "READING" as "reading" on "reading"."status_id" = "status"."status_id"
+          where "reading"."user_id" = ${user_id} and "reading"."book_id" = "BOOK"."book_id"
+          and "reading"."deletedAt" IS null
+    )`),
+          "favorite_author",
+        ],
+      ],
+      include: [
+        {
+          model: ReadingModel,
+          where: { user_id: user_id },
+          required: true,
+          attributes: [],
+        },
+      ],
+    });
+
+    res.status(200).json(books);
+  } catch (error) {
+    next(error);
+  }
+};
 //#endregion
