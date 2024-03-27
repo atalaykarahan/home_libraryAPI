@@ -22,7 +22,7 @@ interface BookInstance
   author_id: string;
   publisher_id: CreationOptional<string>;
   status_id: string;
-  image_path: CreationOptional<string>;
+  book_image: CreationOptional<string>;
   book_summary: string;
   book_isbn: CreationOptional<number>;
   deletedAt?: Date;
@@ -55,7 +55,7 @@ const Book = db.define<BookInstance>(
       type: DataTypes.BIGINT,
       allowNull: false,
     },
-    image_path: {
+    book_image: {
       type: DataTypes.TEXT,
       allowNull: true,
     },
