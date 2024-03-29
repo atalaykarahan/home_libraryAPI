@@ -24,6 +24,7 @@ import { Express } from "express-serve-static-core";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { uploadFileToS3 } from "../util/s3";
 import { insertAuthorFunction } from "./author";
+import { insertPublisherFunction } from "./publisher";
 
 // const bucketName = env.BUCKET_NAME;
 // const bucketRegion = env.BUCKET_REGION;
@@ -117,7 +118,11 @@ export const insertBook: RequestHandler<
     //   (await insertAuthorFunction(req.session.user_id, author[0].label, t));
 
     //check if publisher is not included than we create it
-    // let insertPublisherId = publisher[0].key ?? "";
+    const insertPublisherId = publisher[0].key ?? (await insertPublisherFunction(req.session.user_id, publisher[0].label, t));
+
+
+    console.log("publisher id değeri şu olmalı:", insertPublisherId);
+
     // if (!publisher[0].key) {
     //   const existingPublisherList = await PublisherModel.findAll({
     //     where: {
@@ -149,6 +154,9 @@ export const insertBook: RequestHandler<
     //   insertPublisherId = createdPublisher.publisher_id;
     // }
 
+
+
+    
     //check if categories is not included than we create it
     // let newCateogriesId = [];
     // categories.forEach(async (category) => {

@@ -3,7 +3,7 @@ import PublisherModel from "../models/publisher";
 import LogModel from "../models/log";
 import BookModel from "../models/book";
 import createHttpError from "http-errors";
-import { Sequelize } from "sequelize";
+import { Op, Sequelize, Transaction } from "sequelize";
 import db from "../../db";
 import { EventTypeEnum } from "../util/enums";
 import { turkceBuyukHarfeDonustur } from "../custom-functions";
@@ -200,4 +200,45 @@ export const deletePublisher: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
+
+//#region FUNCTIONS
+
+//#region INSERT PUBLISHER FUNCTION
+
+export const insertPublisherFunction = async (
+  userId: string,
+  name: string,
+  transac: Transaction
+) => {
+  const existingPublisherList = await PublisherModel.findAll({
+    where: {
+      [Op.or]: [{ publisher_name: { [Op.iLike]: `%${name}%` } }],
+    },
+  });
+
+  if (existingPublisherList.length > 0)
+    throw createHttpError(409, "this author already exists.");
+
+  const createdPublisher = await PublisherModel.create(
+    {
+      publisher_name: turkceBuyukHarfeDonustur(name),
+    },
+    { transaction: transac }
+  );
+
+  await LogModel.create(
+    {
+      user_id: userId,
+      event_date: new Date(),
+      publisher_id: createdPublisher.publisher_id,
+      event_type_id: EventTypeEnum.publisher_create,
+    },
+    { transaction: transac }
+  );
+
+  return createdPublisher.publisher_id;
+};
+//#endregion
+
 //#endregion
