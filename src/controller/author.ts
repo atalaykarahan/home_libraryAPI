@@ -4,7 +4,7 @@ import LogModel from "../models/log";
 import BookModel from "../models/book";
 import createHttpError from "http-errors";
 import db from "../../db";
-import { Sequelize } from "sequelize";
+import { Op, Sequelize, Transaction } from "sequelize";
 import { EventTypeEnum } from "../util/enums";
 
 //#region INSERT AUTHOR
@@ -271,4 +271,69 @@ export const deleteAuthor: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
+
+//#region FUNCTIONS
+
+//#region INSERT AUTHOR FUNCTION
+
+export const insertAuthorFunction = async (
+  userId: string,
+  name: string,
+  transac: Transaction
+) => {
+  const existingAuthorList = await AuthorModel.findAll({
+    where: Sequelize.literal(
+      `CONCAT("author_name", ' ', author_surname) ILIKE '%${name}%'`
+    ),
+  });
+
+  if (existingAuthorList.length > 0)
+    throw createHttpError(409, "this author already exists.");
+
+  const words = name.split(" ");
+
+  if (words.length > 1) {
+    const lastName = words.pop();
+    const firstName = words.join(" ");
+
+    const createdAuthor = await AuthorModel.create(
+      {
+        author_name: firstName,
+        author_surname: lastName,
+      },
+      { transaction: transac }
+    );
+    await LogModel.create(
+      {
+        user_id: userId,
+        event_date: new Date(),
+        author_id: createdAuthor.author_id,
+        event_type_id: EventTypeEnum.author_create,
+      },
+      { transaction: transac }
+    );
+    return createdAuthor.author_id;
+  } else {
+    const createdAuthor = await AuthorModel.create(
+      {
+        author_name: name,
+      },
+      { transaction: transac }
+    );
+    await LogModel.create(
+      {
+        user_id: userId,
+        event_date: new Date(),
+        author_id: createdAuthor.author_id,
+        event_type_id: EventTypeEnum.author_create,
+      },
+      { transaction: transac }
+    );
+    return createdAuthor.author_id;
+  }
+};
+
+//#endregion
+
 //#endregion
