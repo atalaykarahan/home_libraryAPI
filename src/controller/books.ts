@@ -26,6 +26,7 @@ import { uploadFileToS3 } from "../util/s3";
 import { insertAuthorFunction } from "./author";
 import { insertPublisherFunction } from "./publisher";
 import { insertCategoryFunction } from "./category";
+import { insertBookCategoryFunction } from "./book_category";
 
 // const bucketName = env.BUCKET_NAME;
 // const bucketRegion = env.BUCKET_REGION;
@@ -97,7 +98,7 @@ export const insertBook: RequestHandler<
 
     //burdaki alttaki kodlar resim atmanın örneği
     // console.log("req body", req.body);
-    // console.log("req file", req.file);
+    console.log("req file", req.file);
 
     /* check in if book is already exists
      * if they are exists we throw a error  */
@@ -112,13 +113,19 @@ export const insertBook: RequestHandler<
       if (existingBook) throw createHttpError(409, "This book already exists.");
     }
 
-    // check if author is not included than we create it ✅
-    // const insertAuthorId =
-    //   author[0].key ??
-    //   (await insertAuthorFunction(req.session.user_id, author[0].label, t));
+    // check if author is not included than we create it
+    const insertAuthorId =
+      author[0].key ??
+      (await insertAuthorFunction(req.session.user_id, author[0].label, t));
 
-    //check if publisher is not included than we create it ✅
-    // const insertPublisherId = publisher[0].key ?? (await insertPublisherFunction(req.session.user_id, publisher[0].label, t));
+    //check if publisher is not included than we create it
+    const insertPublisherId =
+      publisher[0].key ??
+      (await insertPublisherFunction(
+        req.session.user_id,
+        publisher[0].label,
+        t
+      ));
 
     let newCateogriesId: string[] = [];
     for (const category of categories) {
@@ -138,490 +145,238 @@ export const insertBook: RequestHandler<
 
     console.log("yeni kategoriler bunlar", newCateogriesId);
 
-    // let createdBook;
-    // let createdReading;
-    // switch (status[0].key) {
-    //   //reading
-    //   case StatusEnum.okunuyor:
-    //     //create book
-    //     createdBook = await BookModel.create(
-    //       {
-    //         book_title: formatBookTitle(book_title),
-    //         author_id: insertAuthorId,
-    //         status_id: StatusEnum.okunuyor.toString(),
-    //         publisher_id: insertPublisherId,
-    //         book_summary: book_summary,
-    //       },
-    //       { transaction: t }
-    //     );
+    let createdBook;
+    let createdReading;
+    switch (status[0].key) {
+      case StatusEnum.okunuyor:
+        //create book
+        createdBook = await BookModel.create(
+          {
+            book_title: formatBookTitle(book_title),
+            author_id: insertAuthorId,
+            status_id: StatusEnum.okunuyor.toString(),
+            publisher_id: insertPublisherId,
+            book_summary: book_summary,
+          },
+          { transaction: t }
+        );
+        //after creating book, create book and categories relationship
+        for (const categoryId of newCateogriesId) {
+          await insertBookCategoryFunction(
+            req.session.user_id,
+            createdBook.book_id,
+            categoryId,
+            t
+          );
+        }
+        //create reading part
+        createdReading = await ReadingModel.create(
+          {
+            user_id: req.session.user_id,
+            book_id: createdBook.book_id,
+            status_id: StatusEnum.okunuyor,
+          },
+          {
+            transaction: t,
+          }
+        );
 
-    //     //after creating book, create book and categories relationship
-    //     for (const category_id of categories) {
-    //       await BookCategoryModel.create(
-    //         {
-    //           book_id: createdBook.book_id,
-    //           category_id: category_id,
-    //         },
-    //         { transaction: t }
-    //       );
-    //     }
+        //create book log
+        await LogModel.create(
+          {
+            user_id: req.session.user_id,
+            event_date: new Date(),
+            book_id: createdBook.book_id,
+            event_type_id: EventTypeEnum.book_create,
+          },
+          { transaction: t }
+        );
 
-    //     //create reading part
-    //     createdReading = await ReadingModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         book_id: createdBook.book_id,
-    //         status_id: status_id,
-    //       },
-    //       {
-    //         transaction: t,
-    //       }
-    //     );
+        //create reading log
+        await LogModel.create(
+          {
+            user_id: req.session.user_id,
+            event_date: new Date(),
+            book_id: createdBook.book_id,
+            reading_id: createdReading.reading_id,
+            event_type_id: EventTypeEnum.reading_create,
+          },
+          { transaction: t }
+        );
 
-    //     //create book log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         event_type_id: EventTypeEnum.book_create,
-    //       },
-    //       { transaction: t }
-    //     );
+        break;
+      //in the library &
+      case StatusEnum.kitaplikta:
+      case StatusEnum.satin_alinacak:
+        //create book
+        createdBook = await BookModel.create(
+          {
+            book_title: formatBookTitle(book_title),
+            author_id: insertAuthorId,
+            status_id: StatusEnum.satin_alinacak,
+            publisher_id: insertPublisherId,
+            book_summary: book_summary,
+          },
+          { transaction: t }
+        );
 
-    //     //create reading log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         reading_id: createdReading.reading_id,
-    //         event_type_id: EventTypeEnum.reading_create,
-    //       },
-    //       { transaction: t }
-    //     );
+        //after creating book, create book and categories relationship
+        for (const categoryId of newCateogriesId) {
+          await insertBookCategoryFunction(
+            req.session.user_id,
+            createdBook.book_id,
+            categoryId,
+            t
+          );
+        }
 
-    //     break;
-    //   //in the library &
-    //   case StatusEnum.kitaplikta:
-    //   case StatusEnum.satin_alinacak:
-    //     //create book
-    //     createdBook = await BookModel.create(
-    //       {
-    //         book_title: formatBookTitle(book_title),
-    //         author_id: author_id,
-    //         status_id: status_id.toString(),
-    //         publisher_id: publisher_id,
-    //         book_summary: book_summary,
-    //       },
-    //       { transaction: t }
-    //     );
+        //create book log
+        await LogModel.create(
+          {
+            user_id: req.session.user_id,
+            event_date: new Date(),
+            book_id: createdBook.book_id,
+            event_type_id: EventTypeEnum.book_create,
+          },
+          { transaction: t }
+        );
 
-    //     //after creating book, create book and categories relationship
-    //     for (const category_id of categories_id) {
-    //       await BookCategoryModel.create(
-    //         {
-    //           book_id: createdBook.book_id,
-    //           category_id: category_id,
-    //         },
-    //         { transaction: t }
-    //       );
-    //     }
+        break;
+      //readed
+      case StatusEnum.okundu:
+      case StatusEnum.yarim_birakildi:
+        //create book & left unfinished
+        createdBook = await BookModel.create(
+          {
+            book_title: formatBookTitle(book_title),
+            author_id: insertAuthorId,
+            status_id: StatusEnum.kitaplikta.toString(),
+            publisher_id: insertPublisherId,
+            book_summary: book_summary,
+          },
+          { transaction: t }
+        );
 
-    //     //create book log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         event_type_id: EventTypeEnum.book_create,
-    //       },
-    //       { transaction: t }
-    //     );
+        //after creating book, create book and categories relationship
+        for (const categoryId of newCateogriesId) {
+          await insertBookCategoryFunction(
+            req.session.user_id,
+            createdBook.book_id,
+            categoryId,
+            t
+          );
+        }
 
-    //     break;
-    //   //readed
-    //   case StatusEnum.okundu:
-    //   case StatusEnum.yarim_birakildi:
-    //     //create book & left unfinished
-    //     createdBook = await BookModel.create(
-    //       {
-    //         book_title: formatBookTitle(book_title),
-    //         author_id: author_id,
-    //         status_id: StatusEnum.kitaplikta.toString(),
-    //         publisher_id: publisher_id,
-    //         book_summary: book_summary,
-    //       },
-    //       { transaction: t }
-    //     );
+        //create reading part
+        createdReading = await ReadingModel.create(
+          {
+            user_id: req.session.user_id,
+            book_id: createdBook.book_id,
+            status_id: status[0].key,
+          },
+          {
+            transaction: t,
+          }
+        );
 
-    //     //after creating book, create book and categories relationship
-    //     for (const category_id of categories_id) {
-    //       await BookCategoryModel.create(
-    //         {
-    //           book_id: createdBook.book_id,
-    //           category_id: category_id,
-    //         },
-    //         { transaction: t }
-    //       );
-    //     }
+        //create book log
+        await LogModel.create(
+          {
+            user_id: req.session.user_id,
+            event_date: new Date(),
+            book_id: createdBook.book_id,
+            event_type_id: EventTypeEnum.book_create,
+          },
+          { transaction: t }
+        );
 
-    //     //create reading part
-    //     createdReading = await ReadingModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         book_id: createdBook.book_id,
-    //         status_id: status_id,
-    //       },
-    //       {
-    //         transaction: t,
-    //       }
-    //     );
+        //create reading log
+        await LogModel.create(
+          {
+            user_id: req.session.user_id,
+            event_date: new Date(),
+            book_id: createdBook.book_id,
+            reading_id: createdReading.reading_id,
+            event_type_id: EventTypeEnum.reading_create,
+          },
+          { transaction: t }
+        );
+        break;
+      //readed, but not in the library
+      case StatusEnum.okundu_kitaplikta_degil:
+        //create book
+        createdBook = await BookModel.create(
+          {
+            book_title: formatBookTitle(book_title),
+            author_id: insertAuthorId,
+            status_id: StatusEnum.kitaplikta_degil.toString(),
+            publisher_id: insertPublisherId,
+            book_summary: book_summary,
+          },
+          { transaction: t }
+        );
 
-    //     //create book log type must be 25
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         event_type_id: EventTypeEnum.book_create,
-    //       },
-    //       { transaction: t }
-    //     );
+        //after creating book, create book and categories relationship
+        for (const categoryId of newCateogriesId) {
+          await insertBookCategoryFunction(
+            req.session.user_id,
+            createdBook.book_id,
+            categoryId,
+            t
+          );
+        }
 
-    //     //create reading log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         reading_id: createdReading.reading_id,
-    //         event_type_id: EventTypeEnum.reading_create,
-    //       },
-    //       { transaction: t }
-    //     );
-    //     break;
-    //   //readed, not in the library
-    //   case StatusEnum.okundu_kitaplikta_degil:
-    //     //create book
-    //     createdBook = await BookModel.create(
-    //       {
-    //         book_title: formatBookTitle(book_title),
-    //         author_id: author_id,
-    //         status_id: StatusEnum.kitaplikta_degil.toString(),
-    //         publisher_id: publisher_id,
-    //         book_summary: book_summary,
-    //       },
-    //       { transaction: t }
-    //     );
+        //create reading part
+        createdReading = await ReadingModel.create(
+          {
+            user_id: req.session.user_id,
+            book_id: createdBook.book_id,
+            status_id: StatusEnum.okundu,
+          },
+          {
+            transaction: t,
+          }
+        );
 
-    //     //after creating book, create book and categories relationship
-    //     for (const category_id of categories_id) {
-    //       await BookCategoryModel.create(
-    //         {
-    //           book_id: createdBook.book_id,
-    //           category_id: category_id,
-    //         },
-    //         { transaction: t }
-    //       );
-    //     }
+        //create book log type must be 25
+        await LogModel.create(
+          {
+            user_id: req.session.user_id,
+            event_date: new Date(),
+            book_id: createdBook.book_id,
+            event_type_id: EventTypeEnum.book_create,
+          },
+          { transaction: t }
+        );
 
-    //     //create reading part
-    //     createdReading = await ReadingModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         book_id: createdBook.book_id,
-    //         status_id: StatusEnum.okundu,
-    //       },
-    //       {
-    //         transaction: t,
-    //       }
-    //     );
-
-    //     //create book log type must be 25
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         event_type_id: EventTypeEnum.book_create,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     //create reading log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         reading_id: createdReading.reading_id,
-    //         event_type_id: EventTypeEnum.reading_create,
-    //       },
-    //       { transaction: t }
-    //     );
-    //     break;
-    //   default:
-    //     throw createHttpError(500, "undefined status id");
-    //     break;
-    // }
-
-    // for (const authorItem of author) {
-    //   console.log(authorItem.key); // her bir yazarın key değerini konsola yazdırır
-    // }
+        //create reading log
+        await LogModel.create(
+          {
+            user_id: req.session.user_id,
+            event_date: new Date(),
+            book_id: createdBook.book_id,
+            reading_id: createdReading.reading_id,
+            event_type_id: EventTypeEnum.reading_create,
+          },
+          { transaction: t }
+        );
+        break;
+      default:
+        throw createHttpError(500, "undefined status id");
+        break;
+    }
 
     // if (req.file) {
     //   await uploadFileToS3("atalay", req.file);
     // }
 
     //--------- ------------------
-
-    /* check is user already have this book in library
-    and also if user select publisher id we search it with that */
-
-    // const existingBook = await BookModel.findOne({
-    //   where: { book_title: book_title, publisher_id: publisher_id },
-    // });
-
-    // if (existingBook) throw createHttpError(409, "This book already exists.");
-
-    //after this line all insert transaction is begins
-
-    // let createdBook;
-    // let createdReading;
-    // switch (status_id) {
-    //   //reading
-    //   case StatusEnum.okunuyor:
-    //     //create book
-    //     createdBook = await BookModel.create(
-    //       {
-    //         book_title: formatBookTitle(book_title),
-    //         author_id: author_id,
-    //         status_id: StatusEnum.okunuyor.toString(),
-    //         publisher_id: publisher_id,
-    //         book_summary: book_summary,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     //after creating book, create book and categories relationship
-    //     for (const category_id of categories_id) {
-    //       await BookCategoryModel.create(
-    //         {
-    //           book_id: createdBook.book_id,
-    //           category_id: category_id,
-    //         },
-    //         { transaction: t }
-    //       );
-    //     }
-
-    //     //create reading part
-    //     createdReading = await ReadingModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         book_id: createdBook.book_id,
-    //         status_id: status_id,
-    //       },
-    //       {
-    //         transaction: t,
-    //       }
-    //     );
-
-    //     //create book log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         event_type_id: EventTypeEnum.book_create,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     //create reading log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         reading_id: createdReading.reading_id,
-    //         event_type_id: EventTypeEnum.reading_create,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     break;
-    //   //in the library &
-    //   case StatusEnum.kitaplikta:
-    //   case StatusEnum.satin_alinacak:
-    //     //create book
-    //     createdBook = await BookModel.create(
-    //       {
-    //         book_title: formatBookTitle(book_title),
-    //         author_id: author_id,
-    //         status_id: status_id.toString(),
-    //         publisher_id: publisher_id,
-    //         book_summary: book_summary,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     //after creating book, create book and categories relationship
-    //     for (const category_id of categories_id) {
-    //       await BookCategoryModel.create(
-    //         {
-    //           book_id: createdBook.book_id,
-    //           category_id: category_id,
-    //         },
-    //         { transaction: t }
-    //       );
-    //     }
-
-    //     //create book log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         event_type_id: EventTypeEnum.book_create,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     break;
-    //   //readed
-    //   case StatusEnum.okundu:
-    //   case StatusEnum.yarim_birakildi:
-    //     //create book & left unfinished
-    //     createdBook = await BookModel.create(
-    //       {
-    //         book_title: formatBookTitle(book_title),
-    //         author_id: author_id,
-    //         status_id: StatusEnum.kitaplikta.toString(),
-    //         publisher_id: publisher_id,
-    //         book_summary: book_summary,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     //after creating book, create book and categories relationship
-    //     for (const category_id of categories_id) {
-    //       await BookCategoryModel.create(
-    //         {
-    //           book_id: createdBook.book_id,
-    //           category_id: category_id,
-    //         },
-    //         { transaction: t }
-    //       );
-    //     }
-
-    //     //create reading part
-    //     createdReading = await ReadingModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         book_id: createdBook.book_id,
-    //         status_id: status_id,
-    //       },
-    //       {
-    //         transaction: t,
-    //       }
-    //     );
-
-    //     //create book log type must be 25
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         event_type_id: EventTypeEnum.book_create,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     //create reading log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         reading_id: createdReading.reading_id,
-    //         event_type_id: EventTypeEnum.reading_create,
-    //       },
-    //       { transaction: t }
-    //     );
-    //     break;
-    //   //readed, not in the library
-    //   case StatusEnum.okundu_kitaplikta_degil:
-    //     //create book
-    //     createdBook = await BookModel.create(
-    //       {
-    //         book_title: formatBookTitle(book_title),
-    //         author_id: author_id,
-    //         status_id: StatusEnum.kitaplikta_degil.toString(),
-    //         publisher_id: publisher_id,
-    //         book_summary: book_summary,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     //after creating book, create book and categories relationship
-    //     for (const category_id of categories_id) {
-    //       await BookCategoryModel.create(
-    //         {
-    //           book_id: createdBook.book_id,
-    //           category_id: category_id,
-    //         },
-    //         { transaction: t }
-    //       );
-    //     }
-
-    //     //create reading part
-    //     createdReading = await ReadingModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         book_id: createdBook.book_id,
-    //         status_id: StatusEnum.okundu,
-    //       },
-    //       {
-    //         transaction: t,
-    //       }
-    //     );
-
-    //     //create book log type must be 25
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         event_type_id: EventTypeEnum.book_create,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     //create reading log
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         book_id: createdBook.book_id,
-    //         reading_id: createdReading.reading_id,
-    //         event_type_id: EventTypeEnum.reading_create,
-    //       },
-    //       { transaction: t }
-    //     );
-    //     break;
-    //   default:
-    //     throw createHttpError(500, "undefined status id");
-    //     break;
-    // }
-
     await t.commit();
-    // await t.rollback();
     /* For now, we are returning the created book, this is just for testing, then we just return staus code 201. */
     // res.status(201).json(createdBook);
     res.send({});
   } catch (error) {
-    // await t.rollback();
+    await t.rollback();
     next(error);
   }
 };

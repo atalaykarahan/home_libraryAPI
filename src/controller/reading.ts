@@ -20,7 +20,7 @@ export const getMyReadings: RequestHandler = async (req, res, next) => {
       include: [
         {
           model: BookModel,
-          attributes: ["book_id", "book_title", "image_path"],
+          attributes: ["book_id", "book_title", "book_image"],
           include: [{ model: PubliserModel }, { model: AuthorModel }],
         },
         { model: StatusModel },
