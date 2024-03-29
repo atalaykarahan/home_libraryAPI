@@ -218,7 +218,7 @@ export const insertPublisherFunction = async (
   });
 
   if (existingPublisherList.length > 0)
-    throw createHttpError(409, "this author already exists.");
+    throw createHttpError(409, "this publisher already exists.");
 
   const createdPublisher = await PublisherModel.create(
     {

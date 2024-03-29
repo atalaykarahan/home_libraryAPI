@@ -2,7 +2,7 @@ import { RequestHandler } from "express";
 import CategoryModel from "../models/category";
 import BookCategory from "../models/book_category";
 import LogModel from "../models/log";
-import { Sequelize } from "sequelize";
+import { Op, Sequelize, Transaction } from "sequelize";
 import db from "../../db";
 import createHttpError from "http-errors";
 import { EventTypeEnum } from "../util/enums";
@@ -202,4 +202,43 @@ export const deleteCategory: RequestHandler = async (req, res, next) => {
     next(error);
   }
 };
+//#endregion
+
+//#region FUNCTIONS
+
+//#region INSERT CATEGORY FUNCTION
+export const insertCategoryFunction = async (
+  userId: string,
+  name: string,
+  transac: Transaction
+) => {
+  const existingCategoryList = await CategoryModel.findAll({
+    where: {
+      [Op.or]: [{ category_name: { [Op.iLike]: `%${name}%` } }],
+    },
+  });
+
+  if (existingCategoryList.length > 0)
+    throw createHttpError(409, "this category already exists.");
+
+  const createdCategory = await CategoryModel.create(
+    {
+      category_name: formatBookTitle(name),
+    },
+    { transaction: transac }
+  );
+
+  await LogModel.create(
+    {
+      user_id: userId,
+      event_date: new Date(),
+      category_id: createdCategory.category_id,
+      event_type_id: EventTypeEnum.category_create,
+    },
+    { transaction: transac }
+  );
+
+  return createdCategory.category_id;
+};
+
 //#endregion

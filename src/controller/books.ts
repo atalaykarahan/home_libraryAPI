@@ -25,6 +25,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { uploadFileToS3 } from "../util/s3";
 import { insertAuthorFunction } from "./author";
 import { insertPublisherFunction } from "./publisher";
+import { insertCategoryFunction } from "./category";
 
 // const bucketName = env.BUCKET_NAME;
 // const bucketRegion = env.BUCKET_REGION;
@@ -111,79 +112,31 @@ export const insertBook: RequestHandler<
       if (existingBook) throw createHttpError(409, "This book already exists.");
     }
 
-    // author section is done successfully ✅
-    // check if author is not included than we create it
+    // check if author is not included than we create it ✅
     // const insertAuthorId =
     //   author[0].key ??
     //   (await insertAuthorFunction(req.session.user_id, author[0].label, t));
 
-    //check if publisher is not included than we create it
-    const insertPublisherId = publisher[0].key ?? (await insertPublisherFunction(req.session.user_id, publisher[0].label, t));
+    //check if publisher is not included than we create it ✅
+    // const insertPublisherId = publisher[0].key ?? (await insertPublisherFunction(req.session.user_id, publisher[0].label, t));
 
+    let newCateogriesId: string[] = [];
+    for (const category of categories) {
+      console.log(category);
 
-    console.log("publisher id değeri şu olmalı:", insertPublisherId);
+      if (category.key) {
+        newCateogriesId.push(category.key);
+      } else {
+        const insertCategoryId = await insertCategoryFunction(
+          req.session.user_id,
+          category.label,
+          t
+        );
+        newCateogriesId.push(insertCategoryId);
+      }
+    }
 
-    // if (!publisher[0].key) {
-    //   const existingPublisherList = await PublisherModel.findAll({
-    //     where: {
-    //       publisher_name: { [Op.iLike]: `%${publisher[0].label}%` },
-    //     },
-    //   });
-    //   if (existingPublisherList.length > 0)
-    //     throw createHttpError(409, "this publisher already exists.");
-
-    //   //check the author has a surname
-
-    //   //has a surname
-    //   const createdPublisher = await PublisherModel.create(
-    //     {
-    //       publisher_name: turkceBuyukHarfeDonustur(publisher[0].label),
-    //     },
-    //     { transaction: t }
-    //   );
-
-    //   await LogModel.create(
-    //     {
-    //       user_id: req.session.user_id,
-    //       event_date: new Date(),
-    //       publisher_id: createdPublisher.publisher_id,
-    //       event_type_id: EventTypeEnum.publisher_create,
-    //     },
-    //     { transaction: t }
-    //   );
-    //   insertPublisherId = createdPublisher.publisher_id;
-    // }
-
-
-
-    
-    //check if categories is not included than we create it
-    // let newCateogriesId = [];
-    // categories.forEach(async (category) => {
-    //   console.log(category);
-    //   //create new category
-    //   //if there was no category key that mean user create exists category
-    //   if (!category.key) {
-    //     const createdCategory = await CategoryModel.create(
-    //       {
-    //         category_name: formatBookTitle(category.label),
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     await LogModel.create(
-    //       {
-    //         user_id: req.session.user_id,
-    //         event_date: new Date(),
-    //         category_id: createdCategory.category_id,
-    //         event_type_id: EventTypeEnum.category_create,
-    //       },
-    //       { transaction: t }
-    //     );
-
-    //     newCateogriesId.push(createdCategory.category_id);
-    //   }
-    // });
+    console.log("yeni kategoriler bunlar", newCateogriesId);
 
     // let createdBook;
     // let createdReading;
