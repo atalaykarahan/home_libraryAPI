@@ -449,7 +449,6 @@ export const userBookGridCollapseList: RequestHandler = async (
       if (book.book_image) {
         const imageUrl = await getFileToS3(book.book_image);
         if (imageUrl) book.book_image = imageUrl;
-        // console.log(imageUrl);
       }
     }
 

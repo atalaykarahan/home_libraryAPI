@@ -8,13 +8,14 @@ import PubliserModel from "../models/publisher";
 import ReadingModel from "../models/reading";
 import StatusModel from "../models/status";
 import { StatusEnum, EventTypeEnum } from "../util/enums";
+import { getFileToS3 } from "../util/s3";
 
 //#region GET USER READINGS
 export const getMyReadings: RequestHandler = async (req, res, next) => {
   try {
     const user_id = req.session.user_id;
 
-    const myReadings = await ReadingModel.findAll({
+    const myReadings: any = await ReadingModel.findAll({
       attributes: ["reading_id"],
       where: { user_id: user_id },
       include: [
@@ -28,6 +29,15 @@ export const getMyReadings: RequestHandler = async (req, res, next) => {
     });
     if (!myReadings) {
       throw createHttpError(404, "You have no reading record");
+    }
+
+    //if book has a image then we create a image link
+    for (const reading of myReadings) {
+      console.log(reading.BOOK.book_image);
+      if (reading.BOOK.book_image) {
+        const imageUrl = await getFileToS3(reading.BOOK.book_image);
+        if (imageUrl) reading.BOOK.book_image = imageUrl;
+      }
     }
 
     res.status(200).json(myReadings);
