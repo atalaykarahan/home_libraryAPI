@@ -1,45 +1,22 @@
 import { RequestHandler } from "express";
-import BookModel from "../models/book";
-import AuthorModel from "../models/author";
-import PublisherModel from "../models/publisher";
-import StatusModel from "../models/status";
 import createHttpError from "http-errors";
+import { Sequelize } from "sequelize";
 import db from "../../db";
-import BookCategoryModel from "../models/book_category";
-import CategoryModel from "../models/category";
-import { formatBookTitle, turkceBuyukHarfeDonustur } from "../custom-functions";
-import LogModel from "../models/log";
-import ReadingModel from "../models/reading";
-import { EventTypeEnum, StatusEnum } from "../util/enums";
-import { Op, Sequelize } from "sequelize";
+import { formatBookTitle } from "../custom-functions";
 import { Option } from "../models/GeneralModel";
-import multer from "multer";
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
-import env from "../util/validateEnv";
-import { Express } from "express-serve-static-core";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { uploadFileToS3 } from "../util/s3";
+import AuthorModel from "../models/author";
+import BookModel from "../models/book";
+import BookCategoryModel from "../models/book_category";
+import LogModel from "../models/log";
+import PublisherModel from "../models/publisher";
+import ReadingModel from "../models/reading";
+import StatusModel from "../models/status";
+import { EventTypeEnum, StatusEnum } from "../util/enums";
+import { getFileToS3, uploadFileToS3 } from "../util/s3";
 import { insertAuthorFunction } from "./author";
-import { insertPublisherFunction } from "./publisher";
-import { insertCategoryFunction } from "./category";
 import { insertBookCategoryFunction } from "./book_category";
-
-// const bucketName = env.BUCKET_NAME;
-// const bucketRegion = env.BUCKET_REGION;
-// const bucketAccessKey = env.BUCKET_ACCESS_KEY;
-// const bucketSecretAccesskey = env.BUCKET_SECRET_ACCESS_KEY;
-
-// const s3 = new S3Client({
-//   region: bucketRegion,
-//   credentials: {
-//     accessKeyId: bucketAccessKey,
-//     secretAccessKey: bucketSecretAccesskey,
-//   },
-// });
+import { insertCategoryFunction } from "./category";
+import { insertPublisherFunction } from "./publisher";
 
 //#region GET ALL BOOKS
 export const getBooks: RequestHandler = async (req, res, next) => {
@@ -97,8 +74,7 @@ export const insertBook: RequestHandler<
       throw createHttpError(400, "Missing parameters");
 
     //burdaki alttaki kodlar resim atmanın örneği
-    // console.log("req body", req.body);
-    console.log("req file", req.file);
+    // console.log("req file", req.file);
 
     /* check in if book is already exists
      * if they are exists we throw a error  */
@@ -366,15 +342,14 @@ export const insertBook: RequestHandler<
         break;
     }
 
-    // if (req.file) {
-    //   await uploadFileToS3("atalay", req.file);
-    // }
+    if (req.file) {
+      await uploadFileToS3(`${createdBook.book_id}`, req.file);
+      createdBook.book_image = createdBook.book_id;
+      createdBook.save();
+    }
 
-    //--------- ------------------
     await t.commit();
-    /* For now, we are returning the created book, this is just for testing, then we just return staus code 201. */
-    // res.status(201).json(createdBook);
-    res.send({});
+    res.status(201).json(createdBook);
   } catch (error) {
     await t.rollback();
     next(error);
@@ -448,7 +423,7 @@ export const userBookGridCollapseList: RequestHandler = async (
       attributes: [
         "book_id",
         "book_title",
-        "image_path",
+        "book_image",
         [
           Sequelize.literal(`(
           SELECT status_name
@@ -469,6 +444,14 @@ export const userBookGridCollapseList: RequestHandler = async (
         },
       ],
     });
+
+    for (const book of books) {
+      if (book.book_image) {
+        const imageUrl = await getFileToS3(book.book_image);
+        if (imageUrl) book.book_image = imageUrl;
+        // console.log(imageUrl);
+      }
+    }
 
     res.status(200).json(books);
   } catch (error) {

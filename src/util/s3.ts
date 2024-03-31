@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 const bucketName = env.BUCKET_NAME;
 const bucketRegion = env.BUCKET_REGION;
@@ -22,7 +23,7 @@ export async function uploadFileToS3(
   fileName: string,
   file: Express.Multer.File
 ) {
-    //burdaki key uniq olmalı image name o oluyor çünkü
+  //burdaki key uniq olmalı image name o oluyor çünkü
   const params = {
     Bucket: bucketName,
     Key: fileName,
@@ -37,6 +38,22 @@ export async function uploadFileToS3(
     return true;
   } catch (error) {
     console.error("Error uploading file to S3:", error);
+    return false;
+  }
+}
+
+export async function getFileToS3(fileName: string) {
+  const getObjectParams = {
+    Bucket: bucketName,
+    Key: fileName,
+  };
+
+  const command = new GetObjectCommand(getObjectParams);
+  try {
+    const url = await getSignedUrl(s3, command, { expiresIn: 3600 });
+    return url;
+  } catch (error) {
+    console.error("Error get file to S3:", error);
     return false;
   }
 }
