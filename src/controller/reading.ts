@@ -8,7 +8,7 @@ import PubliserModel from "../models/publisher";
 import ReadingModel from "../models/reading";
 import StatusModel from "../models/status";
 import { StatusEnum, EventTypeEnum } from "../util/enums";
-import { getFileToS3 } from "../util/s3";
+import { getFileToS3, uploadFileToS3 } from "../util/s3";
 
 //#region GET USER READINGS
 export const getMyReadings: RequestHandler = async (req, res, next) => {
@@ -274,6 +274,12 @@ export const updateMyReading: RequestHandler<
       },
       { transaction: t }
     );
+
+    if (req.file) {
+      await uploadFileToS3(reading.book_id, req.file);
+      book.book_image = book.book_id;
+      book.save();
+    }
 
     await t.commit();
 
