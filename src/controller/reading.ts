@@ -286,7 +286,6 @@ export const updateMyReading: RequestHandler<
       book.book_image = null;
       book.save();
     }
-
     await t.commit();
 
     res.sendStatus(200);

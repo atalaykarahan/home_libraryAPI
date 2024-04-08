@@ -22,13 +22,20 @@ import { insertPublisherFunction } from "./publisher";
 export const getBooks: RequestHandler = async (req, res, next) => {
   try {
     const books = await BookModel.findAll({
-      attributes: ["book_id", "book_title", "book_summary"],
+      attributes: ["book_id", "book_title", "book_summary", "book_image"],
       include: [
         { model: AuthorModel },
         { model: PublisherModel },
         { model: StatusModel },
       ],
     });
+
+    for (const book of books) {
+      if (book.book_image) {
+        const imageUrl = await getFileToS3(book.book_image);
+        if (imageUrl) book.book_image = imageUrl;
+      }
+    }
 
     res.status(200).json(books);
   } catch (error) {
