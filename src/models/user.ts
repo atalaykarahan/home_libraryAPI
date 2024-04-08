@@ -21,6 +21,8 @@ interface UserInstance
   user_authority_id?: string;
   user_email_verified?: boolean;
   user_google_id?: string;
+  user_visibility?: boolean;
+  user_library_visibility?: boolean;
 }
 
 const User = db.define<UserInstance>(
@@ -56,6 +58,14 @@ const User = db.define<UserInstance>(
     user_google_id: {
       type: DataTypes.DECIMAL,
       allowNull: true,
+    },
+    user_visibility: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+    },
+    user_library_visibility: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
   },
   {
