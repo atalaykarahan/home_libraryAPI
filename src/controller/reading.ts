@@ -8,7 +8,7 @@ import PubliserModel from "../models/publisher";
 import ReadingModel from "../models/reading";
 import StatusModel from "../models/status";
 import { StatusEnum, EventTypeEnum } from "../util/enums";
-import { getFileToS3, uploadFileToS3 } from "../util/s3";
+import { getFileToS3, removeFileToS3, uploadFileToS3 } from "../util/s3";
 
 //#region GET USER READINGS
 export const getMyReadings: RequestHandler = async (req, res, next) => {
@@ -189,6 +189,7 @@ interface UpdateMyReadingBody {
   reading_id?: string;
   status_id?: string;
   comment?: string;
+  remove_book_image?: string;
 }
 export const updateMyReading: RequestHandler<
   unknown,
@@ -199,6 +200,7 @@ export const updateMyReading: RequestHandler<
   const status_id = req.body.status_id;
   const comment = req.body.comment;
   const reading_id = req.body.reading_id;
+  const remove_book_image = req.body.remove_book_image;
   const user_id = req.session.user_id;
   const t = await db.transaction();
 
@@ -278,6 +280,10 @@ export const updateMyReading: RequestHandler<
     if (req.file) {
       await uploadFileToS3(reading.book_id, req.file);
       book.book_image = book.book_id;
+      book.save();
+    } else if (remove_book_image) {
+      await removeFileToS3(book.book_id);
+      book.book_image = null;
       book.save();
     }
 

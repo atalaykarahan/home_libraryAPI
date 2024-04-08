@@ -3,6 +3,7 @@ import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -55,5 +56,20 @@ export async function getFileToS3(fileName: string) {
   } catch (error) {
     console.error("Error get file to S3:", error);
     return false;
+  }
+}
+
+export async function removeFileToS3(fileName: string) {
+  const getObjectParams = {
+    Bucket: bucketName,
+    Key: fileName,
+  };
+
+  const command = new DeleteObjectCommand(getObjectParams);
+
+  try {
+    await s3.send(command)
+  } catch (error) {
+    console.error("Error get file to S3:", error);
   }
 }

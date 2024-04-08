@@ -22,7 +22,7 @@ interface BookInstance
   author_id: string;
   publisher_id: CreationOptional<string>;
   status_id: string;
-  book_image: CreationOptional<string>;
+  book_image: CreationOptional<string> | null;
   book_summary: string;
   book_isbn: CreationOptional<number>;
   deletedAt?: Date;
