@@ -94,7 +94,7 @@ export const removeMyReading: RequestHandler = async (req, res, next) => {
 
     t.commit();
 
-    res.sendStatus(200);
+    res.sendStatus(204);
   } catch (error) {
     t.rollback();
     next(error);
