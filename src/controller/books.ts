@@ -9,6 +9,7 @@ import BookModel from "../models/book";
 import BookCategoryModel from "../models/book_category";
 import LogModel from "../models/log";
 import PublisherModel from "../models/publisher";
+import CategoryModel from "../models/category";
 import ReadingModel from "../models/reading";
 import StatusModel from "../models/status";
 import { EventTypeEnum, StatusEnum } from "../util/enums";
@@ -17,6 +18,7 @@ import { insertAuthorFunction } from "./author";
 import { insertBookCategoryFunction } from "./book_category";
 import { insertCategoryFunction } from "./category";
 import { insertPublisherFunction } from "./publisher";
+import { bool } from "envalid";
 
 //#region GET ALL BOOKS
 export const getBooks: RequestHandler = async (req, res, next) => {
@@ -460,6 +462,51 @@ export const userBookGridCollapseList: RequestHandler = async (
     }
 
     res.status(200).json(books);
+  } catch (error) {
+    next(error);
+  }
+};
+//#endregion
+
+//#region GET LAST INSERTED REACHABLE BOOK
+export const getLastInsertedReachableBook: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const lastBook = await BookModel.findOne({
+      attributes: [
+        "book_id",
+        "book_title",
+        "book_summary",
+        "book_image",
+      ],
+      include: [
+        {
+          model: AuthorModel,
+          attributes: ["author_name", "author_surname"],
+        },
+        { model: PublisherModel, attributes: ["publisher_name"] },
+        {
+          model: CategoryModel,
+          attributes: ["category_id", "category_name"],
+          as: "categories",
+          through: { attributes: [] },
+        },
+      ],
+      where: { status_id: 2 },
+      order: [["book_id", "desc"]],
+    });
+
+    if (!lastBook) throw createHttpError(404, "Last inserted book not found");
+
+    if (lastBook.book_image) {
+      const imageUrl = await getFileToS3(lastBook.book_image);
+      if (imageUrl) lastBook.book_image = imageUrl;
+    }
+
+    res.status(200).json(lastBook);
   } catch (error) {
     next(error);
   }

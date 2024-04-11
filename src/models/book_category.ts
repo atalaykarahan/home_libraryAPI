@@ -51,7 +51,7 @@ const BookCategory = db.define<BookCategoryInstance>(
   }
 );
 
-CategoryModel.belongsTo(BookCategory, { foreignKey: "category_id" });
-BookCategory.belongsTo(CategoryModel, {foreignKey: "category_id"})
+// CategoryModel.belongsTo(BookCategory, { foreignKey: "category_id" });
+// BookCategory.belongsTo(CategoryModel, {foreignKey: "category_id"})
 
 export default BookCategory;
