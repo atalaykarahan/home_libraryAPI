@@ -476,12 +476,7 @@ export const getLastInsertedReachableBook: RequestHandler = async (
 ) => {
   try {
     const lastBook = await BookModel.findOne({
-      attributes: [
-        "book_id",
-        "book_title",
-        "book_summary",
-        "book_image",
-      ],
+      attributes: ["book_id", "book_title", "book_summary", "book_image"],
       include: [
         {
           model: AuthorModel,
@@ -507,6 +502,39 @@ export const getLastInsertedReachableBook: RequestHandler = async (
     }
 
     res.status(200).json(lastBook);
+  } catch (error) {
+    next(error);
+  }
+};
+//#endregion
+
+//#region GET RANDOM BOOK RECOMMENDATION
+export const getRandomBookRecommendation: RequestHandler = async (
+  req,
+  res,
+  next
+) => {
+  try {
+    const random4Books = await BookModel.findAll({
+      attributes: ["book_id", "book_title", "book_summary", "book_image"],
+      where: {
+        status_id: 2,
+      },
+      order: Sequelize.literal("RANDOM()"), // Rastgele sıralama için
+      limit: 4,
+    });
+
+    if (!random4Books) throw createHttpError(404, "random 4 books not found");
+
+    //get each book image
+    for (const book of random4Books) {
+      if (book.book_image) {
+        const imageUrl = await getFileToS3(book.book_image);
+        if (imageUrl) book.book_image = imageUrl;
+      }
+    }
+
+    res.status(200).json(random4Books);
   } catch (error) {
     next(error);
   }

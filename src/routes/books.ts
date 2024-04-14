@@ -22,5 +22,8 @@ router.get("/userBookGridCollapseList/:user_id", BooksController.userBookGridCol
 //get last inserted and reachable book
 router.get("/lastInsertedReachableBook", BooksController.getLastInsertedReachableBook)
 
+//get random book recommendation
+router.get("/randomBookRecommendation", BooksController.getRandomBookRecommendation);
+
 
 export default router;
