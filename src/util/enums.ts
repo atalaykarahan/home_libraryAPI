@@ -34,6 +34,7 @@ const EventTypeEnum = {
   reading_update: "30",
   user_create: "31",
   user_delete: "32",
+  user_update: "35",
   login_error: "33",
   error: "34",
 };

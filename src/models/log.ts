@@ -17,7 +17,7 @@ interface LogInstance
   event_type_id: string;
   event_date?: CreationOptional<Date>;
   book_id?: string;
-  description?: Text;
+  description?: string;
   category_id?: string;
   translator_id?: string;
   publisher_id?: string;

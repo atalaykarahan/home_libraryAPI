@@ -1,6 +1,6 @@
 import express from "express";
 import * as UserController from "../controller/user";
-import { requiresAuth } from "../middleware/auth";
+import { requiresAuth, requiresNotGuest } from "../middleware/auth";
 
 const router = express.Router();
 
@@ -27,6 +27,9 @@ router.post("/new-password", UserController.newPassword);
 
 //data-grid values for users page
 router.get("/userBookGridList", UserController.userBookGridList);
+
+//update user visibility
+router.patch("/update-visibility", requiresNotGuest, UserController.updateVisibility);
 
 
 export default router;

@@ -11,7 +11,9 @@ import BookCategoryModel from "../models/book_category";
 import CategoryModel from "../models/category";
 import { DecimalDataType } from "sequelize";
 import { Sequelize } from "sequelize";
-import { StatusEnum } from "../util/enums";
+import { EventTypeEnum, StatusEnum } from "../util/enums";
+import db from "../../db";
+import LogModel from "../models/log";
 
 //#region AUTHENTICATED USER
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
@@ -117,13 +119,6 @@ export const login: RequestHandler<
   const google_id = req.body.google_id;
 
   try {
-    console.log(
-      "gelen bilgiler bunlar",
-      "kullanıcı adı :",
-      user_name,
-      "şifre ise:",
-      password
-    );
     if (!user_name || !password) {
       throw createHttpError(400, "Missing parameters");
     }
@@ -493,6 +488,64 @@ export const userBookGridList: RequestHandler = async (req, res, next) => {
 
     res.status(200).json(users);
   } catch (error) {
+    next(error);
+  }
+};
+//#endregion
+
+//#region UPDATE VISIBILITY
+interface UpdateVisibilityBody {
+  user_library_visibility?: boolean;
+  user_visibility?: boolean;
+}
+export const updateVisibility: RequestHandler<
+  unknown,
+  unknown,
+  UpdateVisibilityBody,
+  unknown
+> = async (req, res, next) => {
+  const user_library_visibility = req.body.user_library_visibility;
+  const user_visibility = req.body.user_visibility;
+  const user_id = req.session.user_id;
+  const t = await db.transaction();
+  const description = "user change his visibility";
+  const invisible = true;
+  const visible = false;
+
+  try {
+    const user = await UserModel.findOne({ where: { user_id: user_id } });
+    if (!user) throw createHttpError(404, "User not found");
+
+    //if user make himself invisible
+    if (user_visibility) {
+      user.user_visibility = invisible;
+      user.user_library_visibility = invisible;
+      user.save({ transaction: t });
+    } else if (!user_library_visibility) {
+      //if user make only library visible
+      user.user_visibility = visible;
+      user.user_library_visibility = visible;
+      user.save({ transaction: t });
+    } else if (user_library_visibility) {
+      //if user make only library visible
+      user.user_visibility = visible;
+      user.user_library_visibility = invisible;
+      user.save({ transaction: t });
+    }
+
+    LogModel.create(
+      {
+        user_id: user_id,
+        event_type_id: EventTypeEnum.user_update,
+        description: description,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    res.sendStatus(200);
+  } catch (error) {
+    // await t.rollback();
     next(error);
   }
 };
