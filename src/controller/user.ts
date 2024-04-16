@@ -513,27 +513,27 @@ export const updateVisibility: RequestHandler<
   const visible = false;
 
   try {
-    const user = await UserModel.findOne({ where: { user_id: user_id } });
+    const user = await UserModel.findByPk(user_id);
     if (!user) throw createHttpError(404, "User not found");
 
     //if user make himself invisible
     if (user_visibility) {
       user.user_visibility = invisible;
       user.user_library_visibility = invisible;
-      user.save({ transaction: t });
+      await user.save({ transaction: t });
     } else if (!user_library_visibility) {
       //if user make only library visible
       user.user_visibility = visible;
       user.user_library_visibility = visible;
-      user.save({ transaction: t });
+      await user.save({ transaction: t });
     } else if (user_library_visibility) {
       //if user make only library visible
       user.user_visibility = visible;
       user.user_library_visibility = invisible;
-      user.save({ transaction: t });
+      await user.save({ transaction: t });
     }
 
-    LogModel.create(
+    await LogModel.create(
       {
         user_id: user_id,
         event_type_id: EventTypeEnum.user_update,
@@ -545,7 +545,7 @@ export const updateVisibility: RequestHandler<
     await t.commit();
     res.sendStatus(200);
   } catch (error) {
-    // await t.rollback();
+    await t.rollback();
     next(error);
   }
 };
