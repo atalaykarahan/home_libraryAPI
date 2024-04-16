@@ -484,6 +484,7 @@ export const userBookGridList: RequestHandler = async (req, res, next) => {
           "favorite_author",
         ],
       ],
+      where: { user_visibility: false },
     });
 
     res.status(200).json(users);
