@@ -6,6 +6,7 @@ import { formatBookTitle } from "../custom-functions";
 import { Option } from "../models/GeneralModel";
 import AuthorModel from "../models/author";
 import BookModel from "../models/book";
+import UserModel from "../models/user";
 import BookCategoryModel from "../models/book_category";
 import LogModel from "../models/log";
 import PublisherModel from "../models/publisher";
@@ -428,6 +429,13 @@ export const userBookGridCollapseList: RequestHandler = async (
 ) => {
   const user_id = req.params.user_id;
   try {
+    const user = await UserModel.findByPk(user_id);
+    if (!user || user.user_library_visibility)
+      throw createHttpError(
+        404,
+        "Either such user does not exist or the user's library is private."
+      );
+
     const books = await BookModel.findAll({
       attributes: [
         "book_id",
