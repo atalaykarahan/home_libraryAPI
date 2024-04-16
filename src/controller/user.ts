@@ -436,6 +436,7 @@ export const userBookGridList: RequestHandler = async (req, res, next) => {
       attributes: [
         "user_id",
         "user_name",
+        "user_library_visibility",
         [
           Sequelize.literal(`(
           SELECT COUNT(*)
