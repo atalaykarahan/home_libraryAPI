@@ -12,9 +12,18 @@ export const requiresAuth: RequestHandler = (req, res, next) => {
 
 //not guest authority level
 export const requiresNotGuest: RequestHandler = (req, res, next) => {
-  if(req.session.user_id && req.session.user_authority_id != 1){
+  if (req.session.user_id && req.session.user_authority_id != 1) {
     next();
-  }else {
+  } else {
     next(createHttpError(401, "User not authenticated"));
   }
-}
+};
+
+//only admin authority level
+export const requiresOnlyAdmin: RequestHandler = (req, res, next) => {
+  if (req.session.user_id && req.session.user_authority_id == 2) {
+    next();
+  } else {
+    next(createHttpError(401, "User not authenticated"));
+  }
+};

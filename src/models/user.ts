@@ -6,7 +6,7 @@ import {
   InferCreationAttributes,
   Model,
 } from "sequelize";
-import ReadingModel from "./reading";
+import AuthorityModel from "./authority";
 import db from "../../db";
 
 interface UserInstance
@@ -83,5 +83,8 @@ const User = db.define<UserInstance>(
     paranoid: true,
   }
 );
+
+User.belongsTo(AuthorityModel, { foreignKey: "user_authority_id" });
+AuthorityModel.hasMany(User, { foreignKey: "user_authority_id" });
 
 export default User;

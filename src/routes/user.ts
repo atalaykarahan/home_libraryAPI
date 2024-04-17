@@ -1,6 +1,10 @@
 import express from "express";
 import * as UserController from "../controller/user";
-import { requiresAuth, requiresNotGuest } from "../middleware/auth";
+import {
+  requiresAuth,
+  requiresNotGuest,
+  requiresOnlyAdmin,
+} from "../middleware/auth";
 
 const router = express.Router();
 
@@ -10,7 +14,7 @@ router.get("/", requiresAuth, UserController.getAuthenticatedUser);
 //sign up user
 router.post("/signup", UserController.signUp);
 
-//login 
+//login
 router.post("/login", UserController.login);
 
 //logout and clear session
@@ -29,7 +33,13 @@ router.post("/new-password", UserController.newPassword);
 router.get("/userBookGridList", UserController.userBookGridList);
 
 //update user visibility
-router.patch("/update-visibility", requiresNotGuest, UserController.updateVisibility);
+router.patch(
+  "/update-visibility",
+  requiresNotGuest,
+  UserController.updateVisibility
+);
 
+//get all users for admin
+router.get("/get-all-users", requiresOnlyAdmin, UserController.getAllUsers);
 
 export default router;

@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 import { Resend } from "resend";
 import env from "../util/validateEnv";
 import jwt from "jsonwebtoken";
-import BookModel from "../models/book";
+import AuthorityModel from "../models/authority";
 import BookCategoryModel from "../models/book_category";
 import CategoryModel from "../models/category";
 import { DecimalDataType } from "sequelize";
@@ -551,6 +551,28 @@ export const updateVisibility: RequestHandler<
     next(error);
   }
 };
+//#endregion
+
+//#region GET ALL USERS FOR ADMIN
+export const getAllUsers: RequestHandler = async (req, res, next) => {
+  try {
+    const users = await UserModel.findAll({
+      attributes: [
+        "user_id",
+        "user_name",
+        "createdAt",
+        "user_visibility",
+        "user_library_visibility",
+      ],
+      include: [{ model: AuthorityModel, attributes: ["role"] }],
+    });
+
+    res.status(200).json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+
 //#endregion
 
 //#region FUNCTIONS
