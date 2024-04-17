@@ -23,6 +23,8 @@ interface UserInstance
   user_google_id?: string;
   user_visibility?: boolean;
   user_library_visibility?: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 const User = db.define<UserInstance>(
@@ -67,10 +69,18 @@ const User = db.define<UserInstance>(
       type: DataTypes.BOOLEAN,
       allowNull: false,
     },
+    createdAt: {
+      type: DataTypes.TIME,
+      allowNull: false,
+    },
+    updatedAt: {
+      type: DataTypes.TIME,
+      allowNull: false,
+    },
   },
   {
     tableName: "USER",
-    timestamps: false,
+    paranoid: true,
   }
 );
 

@@ -73,11 +73,11 @@ const Book = db.define<BookInstance>(
     },
     createdAt: {
       type: DataTypes.TIME,
-      allowNull: true,
+      allowNull: false,
     },
     updatedAt: {
       type: DataTypes.TIME,
-      allowNull: true,
+      allowNull: false,
     },
   },
   {
