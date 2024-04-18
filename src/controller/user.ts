@@ -301,6 +301,8 @@ export const emailVerified: RequestHandler<
         user_name: decoded.user_name,
         user_email: decoded.email,
         user_email_verified: true,
+        user_visibility: true,
+        user_library_visibility: true,
         user_password: passwordHashed,
       });
 
