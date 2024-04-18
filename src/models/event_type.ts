@@ -7,16 +7,16 @@ import {
 } from "sequelize";
 import db from "../../db";
 
-interface EventInstance
+interface EventTypeInstance
   extends Model<
-    InferAttributes<EventInstance>,
-    InferCreationAttributes<EventInstance>
+    InferAttributes<EventTypeInstance>,
+    InferCreationAttributes<EventTypeInstance>
   > {
   event_id: CreationOptional<string>;
   event_name: string;
 }
 
-const Publisher = db.define<EventInstance>(
+const EventType = db.define<EventTypeInstance>(
   "EVENT_TYPE",
   {
     event_id: {
@@ -36,4 +36,4 @@ const Publisher = db.define<EventInstance>(
   }
 );
 
-export default Publisher;
+export default EventType;

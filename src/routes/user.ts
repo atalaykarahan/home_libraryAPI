@@ -42,4 +42,11 @@ router.patch(
 //get all users for admin
 router.get("/get-all-users", requiresOnlyAdmin, UserController.getAllUsers);
 
+//update user authority
+router.patch(
+  "/update-user-authority",
+  requiresOnlyAdmin,
+  UserController.updateUserAuthority
+);
+
 export default router;

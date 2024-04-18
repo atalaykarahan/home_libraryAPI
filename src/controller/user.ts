@@ -1,19 +1,16 @@
-import { RequestHandler } from "express";
-import UserModel from "../models/user";
-import ReadingModel from "../models/reading";
-import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
-import { Resend } from "resend";
-import env from "../util/validateEnv";
+import { RequestHandler } from "express";
+import createHttpError from "http-errors";
 import jwt from "jsonwebtoken";
-import AuthorityModel from "../models/authority";
-import BookCategoryModel from "../models/book_category";
-import CategoryModel from "../models/category";
-import { DecimalDataType } from "sequelize";
+import { Resend } from "resend";
 import { Sequelize } from "sequelize";
-import { EventTypeEnum, StatusEnum } from "../util/enums";
 import db from "../../db";
+import AuthorityModel from "../models/authority";
+import DbSessionModel from "../models/db_session";
 import LogModel from "../models/log";
+import UserModel from "../models/user";
+import { EventTypeEnum, StatusEnum } from "../util/enums";
+import env from "../util/validateEnv";
 
 //#region AUTHENTICATED USER
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
@@ -573,6 +570,73 @@ export const getAllUsers: RequestHandler = async (req, res, next) => {
   }
 };
 
+//#endregion
+
+//#region UPDATE USER AUTHORITY
+interface UpdateUserAuthorityBody {
+  target_user_id?: string;
+  authority_id?: string;
+}
+export const updateUserAuthority: RequestHandler<
+  unknown,
+  unknown,
+  UpdateUserAuthorityBody,
+  unknown
+> = async (req, res, next) => {
+  const target_user_id = req.body.target_user_id;
+  const authority_id = req.body.authority_id;
+
+  const user_id = req.session.user_id;
+  const t = await db.transaction();
+
+  try {
+    if (!target_user_id || !authority_id)
+      throw createHttpError(400, "Missing parameters");
+
+    const user = await UserModel.findByPk(target_user_id);
+    if (!user) throw createHttpError(404, "User not found");
+
+    const authority = await AuthorityModel.findByPk(authority_id);
+    if (!authority) throw createHttpError(404, "Authority not found");
+
+    user.user_authority_id = authority.authority_id;
+    await user.save({ transaction: t });
+
+    const allMySessions = await DbSessionModel.findAll({
+      where: Sequelize.literal(`"sess"->>'user_id' = '${user.user_id}'`),
+    });
+
+    if (allMySessions.length > 0) {
+      for (const mySession of allMySessions) {
+        await mySession.update(
+          {
+            sess: {
+              ...mySession.sess,
+              user_authority_id: `${authority.authority_id}`,
+            },
+          },
+          { transaction: t }
+        );
+      }
+    }
+
+    const description = `${user_id} numbered user update ${user.user_id} user authority`;
+    await LogModel.create(
+      {
+        user_id: user_id,
+        event_type_id: EventTypeEnum.user_update,
+        description: description,
+      },
+      { transaction: t }
+    );
+
+    await t.commit();
+    res.sendStatus(200);
+  } catch (error) {
+    await t.rollback();
+    next(error);
+  }
+};
 //#endregion
 
 //#region FUNCTIONS
