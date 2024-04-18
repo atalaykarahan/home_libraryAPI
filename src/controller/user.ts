@@ -600,6 +600,12 @@ export const updateUserAuthority: RequestHandler<
     if (!authority) throw createHttpError(404, "Authority not found");
 
     user.user_authority_id = authority.authority_id;
+
+    //if admin change user authority to guest that mean we need to hide user
+    if (authority.authority_id == "1") {
+      user.user_visibility = true;
+      user.user_library_visibility = true;
+    }
     await user.save({ transaction: t });
 
     const allMySessions = await DbSessionModel.findAll({
