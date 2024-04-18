@@ -1,11 +1,11 @@
 import express from "express";
 import * as AuthorController from "../controller/author";
-import { requiresAuth } from "../middleware/auth";
+import { requiresNotGuest } from "../middleware/auth";
 
 const router = express.Router();
 
 //add author
-router.post("/insert", AuthorController.insertAuthor);
+router.post("/insert", requiresNotGuest, AuthorController.insertAuthor);
 
 //all authors and book count
 router.get(
@@ -14,17 +14,15 @@ router.get(
 );
 
 //get all authors
-router.get("/",AuthorController.getAllAuthors);
+router.get("/", AuthorController.getAllAuthors);
 
 //get all authors for select box
-router.get("/select",AuthorController.getAllAuthorsSelect)
-
+router.get("/select", AuthorController.getAllAuthorsSelect);
 
 //update & patch author
-router.patch("/", requiresAuth, AuthorController.patchAuthor);
+router.patch("/", requiresNotGuest, AuthorController.patchAuthor);
 
 //delete author
-router.delete("/:author_id", requiresAuth, AuthorController.deleteAuthor);
-
+router.delete("/:author_id", requiresNotGuest, AuthorController.deleteAuthor);
 
 export default router;

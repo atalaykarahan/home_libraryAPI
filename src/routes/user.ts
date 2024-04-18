@@ -18,7 +18,7 @@ router.post("/signup", UserController.signUp);
 router.post("/login", UserController.login);
 
 //logout and clear session
-router.post("/logout", UserController.logout);
+router.post("/logout", requiresAuth, UserController.logout);
 
 //email verified
 router.post("/email-verified", UserController.emailVerified);

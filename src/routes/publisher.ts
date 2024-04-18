@@ -5,7 +5,7 @@ import { requiresAuth, requiresNotGuest } from "../middleware/auth";
 const router = express.Router();
 
 //all publishers
-router.get("/", PublisherController.getAllPublisher);
+router.get("/", requiresAuth, PublisherController.getAllPublisher);
 
 //add publisher | only guest cant access this route
 router.get(
@@ -21,9 +21,13 @@ router.get(
 );
 
 //update & patch category
-router.patch("/", requiresAuth, PublisherController.patchPublisher);
+router.patch("/", requiresNotGuest, PublisherController.patchPublisher);
 
 //delete category
-router.delete("/:publisher_id", requiresAuth, PublisherController.deletePublisher);
+router.delete(
+  "/:publisher_id",
+  requiresNotGuest,
+  PublisherController.deletePublisher
+);
 
 export default router;
