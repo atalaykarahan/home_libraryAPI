@@ -129,7 +129,7 @@ export const patchCategory: RequestHandler<
 
     if (!category) throw createHttpError(404, "Category not found");
 
-    category.category_name = category_name;
+    category.category_name = formatBookTitle(category_name);
 
     await category.save({ transaction: t });
 
