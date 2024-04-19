@@ -31,15 +31,7 @@ export function formatBookTitle(bookTitle: string): string {
   return words.join(" ");
 }
 
+//we used this function when insert a publisher
 export function turkceBuyukHarfeDonustur(metin: string): string {
-  const harfDuzeltici: { [key: string]: string } = {
-    i: "İ",
-    ı: "I",
-  };
-
-  return metin
-    .replace(/([iı])/g, function (match) {
-      return harfDuzeltici[match];
-    })
-    .toUpperCase();
+  return metin.toLocaleUpperCase('tr');
 }

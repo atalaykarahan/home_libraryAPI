@@ -36,7 +36,7 @@ const port = env.PORT;
 
 app.use(
   cors({
-    origin: "http://192.168.1.40:3001",
+    origin: "http://192.168.1.10:3001",
     credentials: true,
   })
 );
