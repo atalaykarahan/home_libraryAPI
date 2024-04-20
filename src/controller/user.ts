@@ -77,7 +77,7 @@ export const signUp: RequestHandler<
     };
 
     const token = jwt.sign(obj, env.JWT_SECRET_RSA, { expiresIn: "5m" });
-    const confirmLink = `http://localhost:3000/new-verification?token=${token}`;
+    const confirmLink = `https://atalaykarahan.com/new-verification?token=${token}`;
     const resend = new Resend(env.RESEND_API_KEY);
     // const { error } = await resend.emails.send({
     //   from: "Acme <onboarding@resend.dev>",
@@ -86,7 +86,7 @@ export const signUp: RequestHandler<
     //   html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
     // });
     const { error } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
+      from: "Karahan Kitaplık <atalaykarahan.com>",
       to: email,
       subject: "Hesabını onayla",
       html: signUpMailTemplate(user_name, confirmLink),
@@ -362,9 +362,9 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
     const confirmLink = `${env.WEBSITE_URL}/new-password?token=${token}`;
     const resend = new Resend(env.RESEND_API_KEY);
     const { error } = await resend.emails.send({
-      from: "Acme <onboarding@resend.dev>",
+      from: "Karahan Kitaplık <atalaykarahan.com>",
       to: user.user_email,
-      subject: "home library Şifreni sıfırla",
+      subject: "Karahan kitaplık Şifreni sıfırla",
       html: `<p><a href="${confirmLink}">Şifreni sıfırlamak için buraya tıkla</a> tıkla</p>`,
     });
 

@@ -36,7 +36,7 @@ const port = env.PORT;
 
 app.use(
   cors({
-    origin: "http://192.168.1.10:3001",
+    origin: env.WEBSITE_URL,
     credentials: true,
   })
 );
@@ -117,4 +117,3 @@ app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
 });
 
-export default app;
