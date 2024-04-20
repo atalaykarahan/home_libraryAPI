@@ -55,7 +55,7 @@ app.use(
     cookie: {
       domain:"www.atalaykarahan.com",
       sameSite : "none",
-      secure: true,
+      secure: false,
       maxAge: 24 * 60 * 60 * 1000,
     },
     rolling: true,
