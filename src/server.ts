@@ -53,7 +53,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      domain:"www.atalaykarahan.com",
+      domain:"atalaykarahan.com",
       sameSite : "none",
       secure: false,
       maxAge: 24 * 60 * 60 * 1000,
