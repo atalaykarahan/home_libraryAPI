@@ -79,14 +79,8 @@ export const signUp: RequestHandler<
     const token = jwt.sign(obj, env.JWT_SECRET_RSA, { expiresIn: "5m" });
     const confirmLink = `https://atalaykarahan.com/new-verification?token=${token}`;
     const resend = new Resend(env.RESEND_API_KEY);
-    // const { error } = await resend.emails.send({
-    //   from: "Acme <onboarding@resend.dev>",
-    //   to: email,
-    //   subject: "Hesabını onayla",
-    //   html: `<p><a href="${confirmLink}">Buraya</a> tıkla</p>`,
-    // });
     const { error } = await resend.emails.send({
-      from: "Karahan Kitaplık <atalaykarahan.com>",
+      from: "Karahan Kitaplık <atalay@atalaykarahan.com>",
       to: email,
       subject: "Hesabını onayla",
       html: signUpMailTemplate(user_name, confirmLink),
@@ -362,7 +356,7 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
     const confirmLink = `${env.WEBSITE_URL}/new-password?token=${token}`;
     const resend = new Resend(env.RESEND_API_KEY);
     const { error } = await resend.emails.send({
-      from: "Karahan Kitaplık <atalaykarahan.com>",
+      from: "Karahan Kitaplık <atalay@atalaykarahan.com>",
       to: user.user_email,
       subject: "Karahan kitaplık Şifreni sıfırla",
       html: `<p><a href="${confirmLink}">Şifreni sıfırlamak için buraya tıkla</a> tıkla</p>`,
