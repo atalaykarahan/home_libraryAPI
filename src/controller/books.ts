@@ -14,7 +14,7 @@ import CategoryModel from "../models/category";
 import ReadingModel from "../models/reading";
 import StatusModel from "../models/status";
 import { EventTypeEnum, StatusEnum } from "../util/enums";
-import { getFileToS3, uploadFileToS3 } from "../util/s3";
+import { getFileToS3, removeFileToS3, uploadFileToS3 } from "../util/s3";
 import { insertAuthorFunction } from "./author";
 import { insertBookCategoryFunction } from "./book_category";
 import { insertCategoryFunction } from "./category";
@@ -376,6 +376,7 @@ export const deleteBook: RequestHandler = async (req, res, next) => {
   try {
     if (!book_id || !user_id) createHttpError(400, "missing parameters");
 
+    //we search create book log for who is the create this book
     const createBookLog = await LogModel.findOne({
       where: {
         user_id: user_id,
@@ -400,6 +401,12 @@ export const deleteBook: RequestHandler = async (req, res, next) => {
       where: { book_id: book_id },
       transaction: t,
     });
+
+    const book = await BookModel.findByPk(book_id);
+    if(book?.book_image){
+      await removeFileToS3(book.book_id);
+    }
+
     await BookModel.destroy({ where: { book_id: book_id }, transaction: t });
 
     await LogModel.create(
