@@ -11,5 +11,6 @@ export default cleanEnv(process.env,{
     BUCKET_NAME:str(),
     BUCKET_REGION:str(),
     BUCKET_ACCESS_KEY:str(),
-    BUCKET_SECRET_ACCESS_KEY:str()
+    BUCKET_SECRET_ACCESS_KEY:str(),
+    COOKIE_DOMAIN:str()
 });
