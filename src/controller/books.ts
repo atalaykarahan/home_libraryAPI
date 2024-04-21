@@ -502,7 +502,12 @@ export const getLastInsertedReachableBook: RequestHandler = async (
       order: [["book_id", "desc"]],
     });
 
-    if (!lastBook) throw createHttpError(404, "Last inserted book not found");
+    if (!lastBook){
+      // res.sendStatus(200)
+      res.status(200).send("Last inserted book not found");
+      return
+      // throw createHttpError(200, "Last inserted book not found");
+    } 
 
     if (lastBook.book_image) {
       const imageUrl = await getFileToS3(lastBook.book_image);
