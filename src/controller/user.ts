@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import crypto from "crypto";
 import { RequestHandler } from "express";
 import createHttpError from "http-errors";
 import jwt from "jsonwebtoken";
@@ -10,8 +11,8 @@ import DbSessionModel from "../models/db_session";
 import LogModel from "../models/log";
 import UserModel from "../models/user";
 import { EventTypeEnum, StatusEnum } from "../util/enums";
-import env from "../util/validateEnv";
 import { signUpMailTemplate } from "../util/mail/sign-up-template";
+import env from "../util/validateEnv";
 
 //#region AUTHENTICATED USER
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
@@ -129,9 +130,6 @@ export const login: RequestHandler<
 
       // if google id user exist
       if (user) {
-        console.log(
-          "normalde sadece buraya düşmeli yani bu google id değerine sahip bir user var ve o user'ı dönmeli"
-        );
         req.session.user_id = user.user_id;
         req.session.user_authority_id = user.user_authority_id;
         res.status(201).json(createResponseFromUser(user));
@@ -142,7 +140,6 @@ export const login: RequestHandler<
 
         //if email exist
         if (user) {
-          console.log("buraya düştü");
           user.user_google_id = google_id;
           await user.save();
           req.session.user_id = user.user_id;
@@ -269,7 +266,6 @@ export const emailVerified: RequestHandler<
     const decoded = jwt.verify(incomingToken, env.JWT_SECRET_RSA);
 
     if (decoded && typeof decoded !== "string") {
-      console.log("gelen token burda", decoded);
       //  const user = await UserModel.findByPk(decoded.id);
 
       // Check same username
@@ -363,7 +359,7 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
     });
 
     if (error) {
-      console.log("verified mail error: ", error);
+      console.log("Reset mail error: ", error);
       throw createHttpError(503, "Reset mail could not be sent");
     }
 
@@ -394,9 +390,6 @@ export const newPassword: RequestHandler<
     const decoded = jwt.verify(token, env.JWT_PASSWORD_RESET);
 
     if (decoded && typeof decoded !== "string") {
-      console.log("Token doğrulandı ->", decoded);
-      console.log("kullanıcının verdiği şifre ->", password);
-
       const user = await UserModel.findOne({
         where: {
           user_id: decoded.id,
@@ -679,16 +672,10 @@ async function generateUniqueUsername(baseUsername: string) {
     if (!user) {
       userExists = false;
     } else {
-      const randomNum = Math.floor(Math.random() * 1000); // 0 ile 999 arasında rastgele bir sayı
-      uniqueUsername = `${baseUsername}${randomNum}`;
+      const randomHex = crypto.randomBytes(5).toString("hex");
+      uniqueUsername = `${baseUsername.substring(0, 3)}${randomHex}`;
     }
   }
   return uniqueUsername;
 }
-
-// function isEmail(inputValue: string) {
-//   const regex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-//   return regex.test(inputValue);
-// }
-
 //#endregion FUNCTIONS

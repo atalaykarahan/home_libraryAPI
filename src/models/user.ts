@@ -63,11 +63,11 @@ const User = db.define<UserInstance>(
     },
     user_visibility: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
+      allowNull: true,
     },
     user_library_visibility: {
       type: DataTypes.BOOLEAN,
-      allowNull: false,
+      allowNull: true,
     },
     createdAt: {
       type: DataTypes.TIME,
