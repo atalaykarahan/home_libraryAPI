@@ -14,7 +14,7 @@ import { EventTypeEnum, StatusEnum } from "../util/enums";
 import { signUpMailTemplate } from "../util/mail/sign-up-template";
 import env from "../util/validateEnv";
 
-//#region AUTHENTICATED USER
+//#region AUTHENTICATED USER refresh env
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
   try {
     const user = await UserModel.findByPk(req.session.user_id, {
