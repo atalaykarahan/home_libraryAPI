@@ -1,11 +1,11 @@
-import env from "../util/validateEnv";
 import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
   DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import env from "../util/validateEnv";
 
 const bucketName = env.BUCKET_NAME;
 const bucketRegion = env.BUCKET_REGION;
@@ -68,7 +68,7 @@ export async function removeFileToS3(fileName: string) {
   const command = new DeleteObjectCommand(getObjectParams);
 
   try {
-    await s3.send(command)
+    await s3.send(command);
   } catch (error) {
     console.error("Error get file to S3:", error);
   }

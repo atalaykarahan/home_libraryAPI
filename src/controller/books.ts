@@ -129,8 +129,6 @@ export const insertBook: RequestHandler<
       }
     }
 
-    console.log("yeni kategoriler bunlar", newCateogriesId);
-
     let createdBook;
     let createdReading;
     switch (status[0].key) {
@@ -353,7 +351,11 @@ export const insertBook: RequestHandler<
     }
 
     if (req.file) {
-      await uploadFileToS3(`${createdBook.book_id}`, req.file);
+      const s3Response = await uploadFileToS3(
+        `${createdBook.book_id}`,
+        req.file
+      );
+      if (!s3Response) throw createHttpError(500, "Failed to upload image.");
       createdBook.book_image = createdBook.book_id;
       createdBook.save();
     }
@@ -403,7 +405,7 @@ export const deleteBook: RequestHandler = async (req, res, next) => {
     });
 
     const book = await BookModel.findByPk(book_id);
-    if(book?.book_image){
+    if (book?.book_image) {
       await removeFileToS3(book.book_id);
     }
 
@@ -509,12 +511,12 @@ export const getLastInsertedReachableBook: RequestHandler = async (
       order: [["book_id", "desc"]],
     });
 
-    if (!lastBook){
+    if (!lastBook) {
       // res.sendStatus(200)
       res.status(200).send("Last inserted book not found");
-      return
+      return;
       // throw createHttpError(200, "Last inserted book not found");
-    } 
+    }
 
     if (lastBook.book_image) {
       const imageUrl = await getFileToS3(lastBook.book_image);
