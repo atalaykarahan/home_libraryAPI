@@ -49,4 +49,7 @@ router.patch(
   UserController.updateUserAuthority
 );
 
+//get user visiblity settings for statement
+router.get("/get-my-visibility",requiresAuth, UserController.getMyVisibility )
+
 export default router;

@@ -641,6 +641,22 @@ export const updateUserAuthority: RequestHandler<
 };
 //#endregion
 
+//#region GET MY VISIBILITY STATMENT
+export const getMyVisibility: RequestHandler = async (req, res, next) => {
+  try {
+    const user = await UserModel.findByPk(req.session.user_id, {
+      attributes: ["user_library_visibility", "user_visibility"],
+    });
+    if (!user) throw createHttpError(401, "User not found!");
+
+    res.status(200).json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+//#endregion
+
 //#region FUNCTIONS
 interface userResponseParam {
   user_id: string;
@@ -679,4 +695,3 @@ async function generateUniqueUsername(baseUsername: string) {
   return uniqueUsername;
 }
 //#endregion FUNCTIONS
-// refresh env
