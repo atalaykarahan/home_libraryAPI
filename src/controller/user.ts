@@ -13,6 +13,7 @@ import UserModel from "../models/user";
 import { EventTypeEnum, StatusEnum } from "../util/enums";
 import { signUpMailTemplate } from "../util/mail/sign-up-template";
 import env from "../util/validateEnv";
+import { resetPasswordMailTemplate } from "../util/mail/reset-password-template";
 
 //#region AUTHENTICATED USER for redeploy
 export const getAuthenticatedUser: RequestHandler = async (req, res, next) => {
@@ -355,7 +356,7 @@ export const resetPassword: RequestHandler = async (req, res, next) => {
       from: "Karahan Kitaplık <atalay@atalaykarahan.com>",
       to: user.user_email,
       subject: "Karahan kitaplık Şifreni sıfırla",
-      html: `<p><a href="${confirmLink}">Şifreni sıfırlamak için buraya tıkla</a> tıkla</p>`,
+      html: await resetPasswordMailTemplate(confirmLink),
     });
 
     if (error) {
