@@ -1,16 +1,4 @@
-
-
-
-// const imageUrl: string = 'http://localhost:3000/images/example.jpg';
-
-import { getFileToS3 } from "../s3";
-
-
-
-
 export const signUpMailTemplate = async (user_name: string, link: string) => {
-  const logo = await getFileToS3("mailverificationimage5");
-  console.log(logo)
   return `<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional //EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
   <html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
   <head>
@@ -153,7 +141,7 @@ export const signUpMailTemplate = async (user_name: string, link: string) => {
     <tr>
       <td class="v-text-align" style="padding-right: 0px;padding-left: 0px;" align="center">
         
-        <img align="center" border="0" src="${logo}" alt="Logo" title="Logo" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 30%;max-width: 174px;" width="174" class="v-src-width v-src-max-width"/>
+        <img align="center" border="0" src="https://api.atalaykarahan.com/images/image5.png" alt="Logo" title="Logo" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 30%;max-width: 174px;" width="174" class="v-src-width v-src-max-width"/>
         
       </td>
     </tr>
@@ -191,7 +179,7 @@ export const signUpMailTemplate = async (user_name: string, link: string) => {
     <tr>
       <td class="v-text-align" style="padding-right: 0px;padding-left: 0px;" align="center">
         
-        <img align="center" border="0" src="images/image-3.jpeg" alt="Banner" title="Banner" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 94%;max-width: 545.2px;" width="545.2" class="v-src-width v-src-max-width"/>
+        <img align="center" border="0" src="https://api.atalaykarahan.com/images/image3.jpeg" alt="Banner" title="Banner" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: inline-block !important;border: none;height: auto;float: none;width: 94%;max-width: 545.2px;" width="545.2" class="v-src-width v-src-max-width"/>
         
       </td>
     </tr>
@@ -337,7 +325,7 @@ export const signUpMailTemplate = async (user_name: string, link: string) => {
       <table align="left" border="0" cellspacing="0" cellpadding="0" width="32" height="32" style="width: 32px !important;height: 32px !important;display: inline-block;border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;margin-right: 13px">
         <tbody><tr style="vertical-align: top"><td align="left" valign="middle" style="word-break: break-word;border-collapse: collapse !important;vertical-align: top">
           <a href="https://www.linkedin.com/in/atalay-karahan-050985250/" title="LinkedIn" target="_blank">
-            <img src="images/image-2.png" alt="LinkedIn" title="LinkedIn" width="32" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 32px !important">
+            <img src="https://api.atalaykarahan.com/images/image2.png" alt="LinkedIn" title="LinkedIn" width="32" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 32px !important">
           </a>
         </td></tr>
       </tbody></table>
@@ -347,7 +335,7 @@ export const signUpMailTemplate = async (user_name: string, link: string) => {
       <table align="left" border="0" cellspacing="0" cellpadding="0" width="32" height="32" style="width: 32px !important;height: 32px !important;display: inline-block;border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;margin-right: 13px">
         <tbody><tr style="vertical-align: top"><td align="left" valign="middle" style="word-break: break-word;border-collapse: collapse !important;vertical-align: top">
           <a href="https://www.instagram.com/krhnatalay/" title="Instagram" target="_blank">
-            <img src="images/image-1.png" alt="Instagram" title="Instagram" width="32" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 32px !important">
+            <img src="https://api.atalaykarahan.com/images/image1.png" alt="Instagram" title="Instagram" width="32" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 32px !important">
           </a>
         </td></tr>
       </tbody></table>
@@ -357,7 +345,7 @@ export const signUpMailTemplate = async (user_name: string, link: string) => {
       <table align="left" border="0" cellspacing="0" cellpadding="0" width="32" height="32" style="width: 32px !important;height: 32px !important;display: inline-block;border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;margin-right: 0px">
         <tbody><tr style="vertical-align: top"><td align="left" valign="middle" style="word-break: break-word;border-collapse: collapse !important;vertical-align: top">
           <a href="https://github.com/atalaykarahan" title="GitHub" target="_blank">
-            <img src="images/image-4.png" alt="GitHub" title="GitHub" width="32" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 32px !important">
+            <img src="https://api.atalaykarahan.com/images/image4.png" alt="GitHub" title="GitHub" width="32" style="outline: none;text-decoration: none;-ms-interpolation-mode: bicubic;clear: both;display: block !important;border: none;height: auto;float: none;max-width: 32px !important">
           </a>
         </td></tr>
       </tbody></table>
