@@ -84,7 +84,7 @@ export const signUp: RequestHandler<
       from: "Karahan Kitaplık <atalay@atalaykarahan.com>",
       to: email,
       subject: "Hesabını onayla",
-      html: signUpMailTemplate(user_name, confirmLink),
+      html: await signUpMailTemplate(user_name, confirmLink),
     });
 
     if (error) {
