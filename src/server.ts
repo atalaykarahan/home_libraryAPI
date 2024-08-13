@@ -10,6 +10,11 @@ import statusRoutes from "./routes/status";
 import readingRoutes from "./routes/reading";
 import morgan from "morgan";
 import createHttpError, { isHttpError } from "http-errors";
+import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+// .env dosyasının yolunu belirtin
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 // Database
 import db from "../db";
 import session from "express-session";
