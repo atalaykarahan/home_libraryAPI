@@ -74,7 +74,7 @@ app.get("/", (req, res) => {
 });
 
 // testing after publishing project
-app.get("/xaera", (req, res) => {
+app.get("/krhnatalay", (req, res) => {
   res.send("Connection successful!");
 });
 
@@ -119,6 +119,4 @@ app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
 });
-
-export default app;
 
