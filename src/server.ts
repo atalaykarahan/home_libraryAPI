@@ -69,6 +69,7 @@ app.use(
         connectionString: env.POSTGRE_CONNECTION_STRING, // Veritabanı bağlantı dizenizi buraya ekleyin
       },
       tableName: "DB_SESSION",
+      pruneSessionInterval: 60 * 60,
     }),
   })
 );
